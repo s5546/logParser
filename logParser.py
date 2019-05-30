@@ -27,11 +27,24 @@ make it cli friendly- pass some parameters in yaknow
 	-k keyword file OR string
 	-p log path
 	-s save file to xxxx.txt
-	-t show execution time for potentially lengthy tasks
+	-d debug strings (show variables, execution times, etc)
 	
 options for searched data
 	save to file
 	automatically show lines- as many as the current terminal size can handle
+	
+clean up
+	why my formatting succ so much pls fix, future me
+	figure out how to format python code
+	why so many unneeded debug statements
+	
+where the comments at
+	get me those comments
+	
+QoL
+	dont have so many exceptions
+	there's probably optimizations everywhere to be made
+		eg. lots of lists used towards the end when we could probably just reuse 1/2 of em
 '''
 
 import re, sys, os, platform
@@ -41,7 +54,6 @@ import time
 #dashes, slashes, and maybe more if i think of anything else.
 #if the arg exists, this will return True; else it returns False
 def argFormats(arg):
-	print("arg %s checked" % arg)
 	if ('-' + arg) in sys.argv or ('/' + arg) in sys.argv:
 		return True
 	return False
@@ -49,9 +61,8 @@ def argFormats(arg):
 if not argFormats('f'):
 	import psutil #you'll have to install these using pip3
 
-
-
 # | / - \ |
+# slows down execution a little
 global state
 def spinningLoad(state = 1):
 	spinner = {
@@ -115,7 +126,6 @@ else:
 	dir = os.popen("ls").readlines()
 for line in dir:
 	print(line)
-	#dir.pop(line)
 	
 print(dir)
 
