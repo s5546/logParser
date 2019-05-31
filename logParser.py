@@ -20,33 +20,6 @@
 #  
 #!/usr/bin/python3
 
-'''
-todo:
-make it cli friendly- pass some parameters in yaknow
-	-q quiet
-	-k keyword file OR string
-	-p log path
-	-s save file to xxxx.txt
-	-d debug strings (show variables, execution times, etc)
-	
-options for searched data
-	save to file
-	automatically show lines- as many as the current terminal size can handle
-	
-clean up
-	why my formatting succ so much pls fix, future me
-	figure out how to format python code
-	why so many unneeded debug statements
-	
-where the comments at
-	get me those comments
-	
-QoL
-	dont have so many exceptions
-	there's probably optimizations everywhere to be made
-		eg. lots of lists used towards the end when we could probably just reuse 1/2 of em
-'''
-
 import re, sys, os, platform
 import time
 
