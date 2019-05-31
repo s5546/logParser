@@ -67,3 +67,8 @@ QoL
 	there's probably optimizations everywhere to be made
 	
 		eg. lots of lists used towards the end when we could probably just reuse 1/2 of em
+
+
+make it work with 3gb+ files
+	
+	im not actually sure where the cutoff is, but it just devours ram with sufficently large files- 4gb ram and 10gb swap wasnt enough

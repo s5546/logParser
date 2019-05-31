@@ -31,6 +31,7 @@ dashes, slashes, and maybe more if i think of anything else.
 if the arg exists, this will return True; else it returns False
 '''
 def argFormats(arg):
+	arg = arg.lower()
 	if ('-' + arg) in sys.argv or ('/' + arg) in sys.argv:
 		return True
 	return False
@@ -92,8 +93,9 @@ def readFile(filepath):
 		elif (statinfo.st_size > mem.available):
 			print("File size: {s} \t\t Free RAM + Swap: {f}".format(s=statinfo.st_size, f=(swapmem.free+mem.available)))
 			choice=input('This file is larger than your RAM, but may be small'
-							' enough to fit in swap. Continue? (y/n)\n> ')
-			if (choice == 'n' or choice == 'N'):
+							+ ' enough to fit in swap. This is probably '
+							+ 'a bad idea. Continue? (y/n)\n> ')
+			if (choice.lower() == 'n'):
 				return file1lines
 	qprint("Opening file: "+filepath)
 	file1 = open(filepath)
@@ -121,17 +123,15 @@ def executionTimer(startTime, endTime):
 if platform.system() == "Windows":
 	dir = os.popen("dir").readLines()
 	if argFormats('l'):
-		print("Arguments forcing Linux directory printing.")
+		qprint("Arguments forcing Linux directory printing.")
 		dir = os.popen("ls").readLines()
 else:
 	if argFormats('w'):
-		print("Arguments forcing Windows directory printing.")
+		qprint("Arguments forcing Windows directory printing.")
 		dir = os.popen("dir").readLines()
 	dir = os.popen("ls").readlines()
 for line in dir:
-	print(line)
-	
-print(dir)
+	qprint(line)
 
 file1_path=input("Type a file from above, or type a filepath...\n> ")
 file1lines = []
@@ -149,25 +149,24 @@ for line in file1lines:
 		file2lines.append(word)
 		lastReturnIndex = currentIndex
 	currentIndex += 1
-print(file2lines[0])
 searchTerm = input("Type a keyword to search for...\n> ")
-termsFound = []
+file1lines = []
 for line in file2lines:
 	if searchTerm in line:
 		termsFound.append(line)
 print(len(termsFound))
 while True: #replace this with a better loop
 	choice = input("What do you want to do with these lines?"
-				+ "\n(S)ave to file\n(V)iew Logs\n(E)xit")
-	if choice == 'e':
+				+ "\n(S)ave to file\n(V)iew Logs\n(E)xit\n> ")
+	if choice.lower() == 'e':
 		break
-	elif choice == 's':
+	elif choice.lower() == 's':
 		choice = input("Name your file...")
 		saveFile(termsFound, choice)
-	elif choice == 'v':
+	elif choice.lower() == 'v':
 		currentLine = 0
 		while True: #emulated do-while loop
-			currentLine += 20 #replace 20 with terminal height later
+			currentLine += os.get_terminal_size(0)[1]-2
 			for i in range(currentLine): 
 				try:
 					print(termsFound[i], end='')
@@ -175,10 +174,12 @@ while True: #replace this with a better loop
 					print("End of lines, restart (y) or end (N)?")
 					time.sleep(1)
 					choice = input("\n> ")
-					if choice == 'y':
+					if choice.lower() == 'y':
 						currentLine = 0
 					else:
 						break
 			choice = input("\nMore? (Y/n)\n> ")
-			if choice == 'n':
+			if choice.lower() == 'n':
 				break
+	else:
+		print("choose something else")
