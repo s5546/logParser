@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 #  logParser.py
 #  
 #  Copyright 2019 Spencer Finch <altmcman@gmail.com>
@@ -18,61 +19,91 @@
 #  MA 02110-1301, USA.
 #  
 #  
-#!/usr/bin/python3
 
 import re, sys, os, platform
 import time
 
-#easily defines all the different formats you could use on a commandline-
-#dashes, slashes, and maybe more if i think of anything else.
-#if the arg exists, this will return True; else it returns False
+
+
+'''
+easily defines all the different formats you could use on a commandline-
+dashes, slashes, and maybe more if i think of anything else.
+if the arg exists, this will return True; else it returns False
+'''
 def argFormats(arg):
 	if ('-' + arg) in sys.argv or ('/' + arg) in sys.argv:
 		return True
 	return False
+	
+def saveFile(listToBeWriten, name = "parsedLog"):
+	f = open('tmpFile', 'w')
+	qprint("saving file...")
+	for line in listToBeWriten:
+		f.write(line)
+		spinningLoad()
+	f.flush()
+	os.fsync(f.fileno())
+	f.close()
+	os.rename('tmpFile', name)
+	qprint("file saved!")
+
 
 if not argFormats('f'):
 	import psutil #you'll have to install these using pip3
+	
+'''
+checks for the quiet flag, and if absent it prints
+	maybe expand upon this? like also checking for verbosity?
+'''
+def qprint(arg):
+	if not argFormats('q'):
+		print(arg)
 
 # | / - \ |
 # slows down execution a little
-global state
-def spinningLoad(state = 1):
+state = 1
+def spinningLoad():
+	global state
+	if argFormats('x'):
+		return
 	spinner = {
 		1: '|',
 		2: '/',
 		3: '-',
 		4: '\\'
 	}
-	print("\b" + spinner.get(state, ''), end="\r")
-	if (state == 4):
+	if state == 4:
 		state = 1
 	else:
-		state + 1
+		state += 1
+	print('\b' + spinner.get(state, ''), end="\r")
 		
 def readFile(filepath):
 	file1lines = []
-	if not argFormats('f'):
+	if not argFormats('f') or not argFormats('q'):
 		statinfo = os.stat(filepath)
 		mem=psutil.virtual_memory()
 		swapmem=psutil.swap_memory()
 		if (statinfo.st_size > mem.total):
-			print("File larger than memory space. \nEither upgrade your computer, or allocate more swap space to process this (albeit slowly).") 
+			print("File larger than memory space." 
+					+ "\nEither upgrade your computer, or allocate more swap"
+					+ " space to process this (albeit slowly).") 
 			return file1lines
 		elif (statinfo.st_size > mem.available):
 			print("File size: {s} \t\t Free RAM + Swap: {f}".format(s=statinfo.st_size, f=(swapmem.free+mem.available)))
-			choice=input('This file is larger than your RAM, but may be small enough to fit in swap. Continue? (y/n)\n> ')
+			choice=input('This file is larger than your RAM, but may be small'
+							' enough to fit in swap. Continue? (y/n)\n> ')
 			if (choice == 'n' or choice == 'N'):
 				return file1lines
-	print("Opening file: "+filepath)
+	qprint("Opening file: "+filepath)
 	file1 = open(filepath)
-	print("Reading lines, please wait...")
+	qprint("Reading lines, please wait...")
 	start_time = time.time()
 	for line in file1:
 		file1lines += line
 		if not argFormats('x'):
 			spinningLoad()
-	print("Data gotten! Closing file")
+	qprint("Data gotten! Closing file")
 	file1.close()
 	executionTimer(start_time, time.time())
 	return file1lines
@@ -123,5 +154,31 @@ searchTerm = input("Type a keyword to search for...\n> ")
 termsFound = []
 for line in file2lines:
 	if searchTerm in line:
-		termsFound.append(searchTerm)
+		termsFound.append(line)
 print(len(termsFound))
+while True: #replace this with a better loop
+	choice = input("What do you want to do with these lines?"
+				+ "\n(S)ave to file\n(V)iew Logs\n(E)xit")
+	if choice == 'e':
+		break
+	elif choice == 's':
+		choice = input("Name your file...")
+		saveFile(termsFound, choice)
+	elif choice == 'v':
+		currentLine = 0
+		while True: #emulated do-while loop
+			currentLine += 20 #replace 20 with terminal height later
+			for i in range(currentLine): 
+				try:
+					print(termsFound[i], end='')
+				except:
+					print("End of lines, restart (y) or end (N)?")
+					time.sleep(1)
+					choice = input("\n> ")
+					if choice == 'y':
+						currentLine = 0
+					else:
+						break
+			choice = input("\nMore? (Y/n)\n> ")
+			if choice == 'n':
+				break

@@ -5,6 +5,8 @@ Developed on python 3.6.7, using Geany
 
 Uses psutil, you'll have to install it using pip3 (or just use the -f flag, it gets rid of some safety measures but you wont need psutil then)
 
+Attempts to follow PEP8
+
 switches:
 
 -f removes some safety precautions and "forces" it to read the file
@@ -49,6 +51,8 @@ clean up
 	figure out how to format python code
 	
 	why so many unneeded debug statements
+	
+	why all these random variables happening everywhere
 	
 	
 where the comments at
