@@ -35,6 +35,8 @@ make it cli friendly- pass some parameters in yaknow
 	-s save file to xxxx.txt
 	
 	-d debug strings (show variables, execution times, etc)
+	
+	-c continous scanning
 
 	
 options for searched data
@@ -55,9 +57,11 @@ clean up
 	why all these random variables happening everywhere
 	
 	
-where the comments at
+better switch support
 
-	get me those comments
+	https://docs.python.org/3/library/argparse.html#prefix-chars
+	
+	could probably replace argFormats() using this
 	
 	
 QoL
@@ -67,8 +71,3 @@ QoL
 	there's probably optimizations everywhere to be made
 	
 		eg. lots of lists used towards the end when we could probably just reuse 1/2 of em
-
-
-make it work with 3gb+ files
-	
-	im not actually sure where the cutoff is, but it just devours ram with sufficently large files- 4gb ram and 10gb swap wasnt enough
