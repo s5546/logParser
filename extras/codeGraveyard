@@ -1,0 +1,26 @@
+##
+#The code graveyard is a fun thing I do when coding.
+#Inevitably, I'm gonna write some dumb code that ultimately gets replaced by better code which does the job better (or right in the first place).
+#When that happens, I send the old code here.
+#For the most part it's just kinda neat to look back on, but occasionally I realize another purpose for prevously exiled code and come back to my graveyard files to retrieve it.
+##
+
+#converts individual letter elements to lines
+lastReturnIndex = 0
+currentIndex = 0
+print("Processing list...")
+file2lines=[]
+for line in file1lines:
+	if line == '\n':
+		word = ''
+		for i in range(lastReturnIndex, currentIndex):
+			word += file1lines[i]
+		file2lines.append(word)
+		lastReturnIndex = currentIndex
+	currentIndex += 1
+	
+#adds chars to a list until it finds a newline
+if not line == '\n':
+			word += line
+		else:
+			file1lines.append(word)

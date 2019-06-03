@@ -20,23 +20,33 @@
 #  
 #  
 
-import re, sys, os, platform
+
+
+def argFormats(arg):
+	arg = arg.lower()
+	if ('-' + arg) in sys.argv or ('/' + arg) in sys.argv:
+		return True
+	return False
+
+import sys, os
+
+if not argFormats('f'):
+	import psutil #you'll have to install these using pip3
+	process = psutil.Process(os.getpid())
+	print(" at import>>>" + str(process.memory_info().rss))  # in bytes 
+
+import re, platform
 import time
-
-
 
 '''
 easily defines all the different formats you could use on a commandline-
 dashes, slashes, and maybe more if i think of anything else.
 if the arg exists, this will return True; else it returns False
 '''
-def argFormats(arg):
-	arg = arg.lower()
-	if ('-' + arg) in sys.argv or ('/' + arg) in sys.argv:
-		return True
-	return False
+
 	
 def saveFile(listToBeWriten, name = "parsedLog"):
+	print(" at save>>>" + str(process.memory_info().rss))  # in bytes 
 	f = open('tmpFile', 'w')
 	qprint("saving file...")
 	for line in listToBeWriten:
@@ -49,8 +59,7 @@ def saveFile(listToBeWriten, name = "parsedLog"):
 	qprint("file saved!")
 
 
-if not argFormats('f'):
-	import psutil #you'll have to install these using pip3
+
 	
 '''
 checks for the quiet flag, and if absent it prints
@@ -101,12 +110,12 @@ def readFile(filepath):
 	file1 = open(filepath)
 	qprint("Reading lines, please wait...")
 	start_time = time.time()
+	word = ''
 	for line in file1:
-		file1lines += line
+		file1lines.append(line)
 		if not argFormats('x'):
 			spinningLoad()
 	qprint("Data gotten! Closing file")
-	file1.close()
 	executionTimer(start_time, time.time())
 	return file1lines
 	
@@ -132,30 +141,21 @@ else:
 	dir = os.popen("ls").readlines()
 for line in dir:
 	qprint(line)
-
+	
+print(" before filescan>>>" + str(process.memory_info().rss))  # in bytes 
 file1_path=input("Type a file from above, or type a filepath...\n> ")
-file1lines = []
 file1lines = readFile(file1_path)
-#converts individual letter elements to lines
-lastReturnIndex = 0
-currentIndex = 0
-print("Processing list...")
-file2lines=[]
-for line in file1lines:
-	if line == '\n':
-		word = ''
-		for i in range(lastReturnIndex, currentIndex):
-			word += file1lines[i]
-		file2lines.append(word)
-		lastReturnIndex = currentIndex
-	currentIndex += 1
+print(" at filescan>>>" + str(process.memory_info().rss))  # in bytes 
+print('<<<>>>')
+
 searchTerm = input("Type a keyword to search for...\n> ")
-file1lines = []
-for line in file2lines:
+termsFound = []
+for line in file1lines:
 	if searchTerm in line:
 		termsFound.append(line)
 print(len(termsFound))
 while True: #replace this with a better loop
+	print(" at loopstart>>>" + str(process.memory_info().rss))  # in bytes 
 	choice = input("What do you want to do with these lines?"
 				+ "\n(S)ave to file\n(V)iew Logs\n(E)xit\n> ")
 	if choice.lower() == 'e':
