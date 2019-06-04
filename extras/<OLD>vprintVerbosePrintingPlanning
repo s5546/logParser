@@ -1,0 +1,57 @@
+This is documentation from a different version of the program- on 06/04/19, i did 4 hrs of work many of which related to this document and the code that went with it.
+I then tried a fuzzing program to make sure it wasnt broken, using the command `fuzzer.py > logParser.py`.
+That... was not the right command. I had to redo the last four hours of work.
+
+(high p, high v) will almost certianly be caught by one of the three <<needs work>>
+(high p, low v) if p is larger than v it's printed <<good>
+(low p, high v) will likely be higher than 0 <<good>
+(low p, low v) it's not important and we dont care so it wont be printed <<good>>
+
+v: [1, ∞) #cant get in with less than 1 v
+p: (-∞, ∞)
+
+v = 2, p = 5: (important)
+	1. yes
+	2. no
+	3. no
+
+v = 2, p = 1 (sorta matters)
+	1. no
+	2. no
+	3. yes
+
+v = 2, p = 2 (matters and we wanna hear it)
+	1. no
+	2. no
+	3. yes
+
+v = 1, p = 2 (matters)
+	1. yes
+	2. no
+	3. no
+
+v = 2, p = -2 (irrelevant but we wanna hear)
+	1. no
+	2. no
+	3. yes, 2 - (-2) = 4
+
+v = 1, p = 1 (sorta wanna haer and it sorta matters)
+	1. no
+	2. no
+	3. yes
+
+v = 2, p = 0 (wanna hear but its not important)
+	1. no
+	2. no
+	3. yes
+
+v = 1, p = -100000 (sorta wanna hear and nobody cares)
+	1. no
+	2. no
+	3. no
+
+
+all in all it's probably fine
+
+verbose level = minimum alert level
+	something - vlevel = 

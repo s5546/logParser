@@ -11,39 +11,39 @@ switches:
 
 -f removes some safety precautions and "forces" it to read the file
 
+	Also removes the need for psutil
+
 -w forces windows style commands even if your OS isnt windows
 
--l forces linux style commands even if your OS isnt linux
+-u forces unix style commands even if your OS isnt unix
 
 -x disables the spinny load thing, but why would you want to do that?
 
 	i put literally minutes into coding that and you're just gonna break my heart like that? </3
 
+-k keywords to search through the file for
+
+-l path to log you want to parse
+
+-s saves the logs to whatever file you specify
+
+-q reduces verbosity, varying depending on how many q's you use
+
+	3 q's or more will disable console output, once I get that implemented
+
+-v intensifies verbosity, varying depending on how many v's you use.
+	
+	2 v's or more shows debug info
 
 
+
+----
 
 todo:
 
 make it cli friendly- pass some parameters in yaknow
-
-	-q quiet
-	
-	-k keyword file OR string
-	
-	-p log path
-	
-	-s save file to xxxx.txt
-	
-	-d debug strings (show variables, execution times, etc)
 	
 	-c continous scanning
-
-	
-options for searched data
-
-	save to file
-
-	automatically show lines- as many as the current terminal size can handle
 	
 	
 clean up
@@ -52,16 +52,9 @@ clean up
 	
 	figure out how to format python code
 	
-	why so many unneeded debug statements
-	
 	why all these random variables happening everywhere
 	
-	
-better switch support
-
-	https://docs.python.org/3/library/argparse.html#prefix-chars
-	
-	could probably replace argFormats() using this
+	more comments pls
 	
 	
 QoL
@@ -69,5 +62,7 @@ QoL
 	dont have so many exceptions
 	
 	there's probably optimizations everywhere to be made
-	
-		eg. lots of lists used towards the end when we could probably just reuse 1/2 of em
+
+	improve the spin loader
+		
+		threading, basically

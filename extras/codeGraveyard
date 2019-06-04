@@ -1,8 +1,9 @@
 ##
 #The code graveyard is a fun thing I do when coding.
-#Inevitably, I'm gonna write some dumb code that ultimately gets replaced by better code which does the job better (or right in the first place).
+#Inevitably, I'm gonna write some dumb code that ultimately gets replaced by code which does the job better (or right in the first place).
 #When that happens, I send the old code here.
 #For the most part it's just kinda neat to look back on, but occasionally I realize another purpose for prevously exiled code and come back to my graveyard files to retrieve it.
+#Besides, bytes are cheap. Whats the harm, eh?
 ##
 
 #converts individual letter elements to lines
@@ -24,3 +25,8 @@ if not line == '\n':
 			word += line
 		else:
 			file1lines.append(word)
+
+#if args.quiet > 2, redirect stout from the console
+if args.quiet > 2:
+	text_trap = io.StringIO()
+	sys.stdout = text_trap
