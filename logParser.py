@@ -21,7 +21,7 @@
 #  
 
 
-import sys, os, argparse, platform, time
+import sys, os, argparse, platform, time, mmap, multiprocessing, math, re
 from pathlib import Path
 parser = argparse.ArgumentParser(description='Choose a keyword, '
 		+ 'logfile, and/or username..', prefix_chars='-/')
@@ -37,7 +37,6 @@ verboistyGroup = parser.add_mutually_exclusive_group()
 verboistyGroup.add_argument('-v', '--verbose', help="intensifies console output", action="count")
 verboistyGroup.add_argument('-q', '--quiet', help="reduces console output", action="count")
 args = parser.parse_args()
-print(args)
 
 if not args.force:
 	import psutil #you'll have to install this using pip3
@@ -112,56 +111,7 @@ def spinningLoad():
 		state += 1
 	print('\b' + spinner.get(state, ''), end="\r")
 		
-'''
-Reads a file located at a given path.
-Checks that the file can actually be read without running out of memory
- (unless the f or q flag has been set)
-Then proceeds to read the file and place each line in a list, one by one
-'''	
-def readFile(filepath):
-	file1lines = []
-	vprint("Opening file: "+filepath, -1)
-	try:
-		file1 = open(filepath)
-	except:
-		return readFile(input("Error reading file: Check the name/filepath, and your "
-		+ "permissions. \nChoose a different file:\n> "))
-		#this recursion might be a bad idea idk
-	if not args.force or not args.quiet:
-		statinfo = os.stat(filepath)
-		mem=psutil.virtual_memory()
-		swapmem=psutil.swap_memory()
-		if (statinfo.st_size > mem.available+swapmem.free):
-			vprint("File larger than memory space." 
-					+ "\nEither upgrade your computer, allocate more swap"
-					+ " space to process this (albeit slowly), or"
-					+ "\nclose some programs.", 3) 
-			return file1lines
-		elif (statinfo.st_size > mem.available):
-			print("File size: {s} \t\t Free RAM + Swap: {f}".format(s=statinfo.st_size, f=(swapmem.free+mem.available)))
-			choice=input('This file is larger than your RAM, but may be small'
-							+ ' enough to fit in swap. This is probably '
-							+ 'a bad idea. Continue? (y/n)\n> ')
-			if (choice.lower() == 'n'):
-				return file1lines
-	vprint("Reading lines, please wait...", 2)
-	start_time = executionTimer()
-	word = ''
-	if args.verbose > 2:
-		i = 0
-	for line in file1:
-		file1lines.append(line)
-		if not args.nofun:
-			spinningLoad()
-		if args.verbose > 2:
-			i += 1
-			if i == 100000000:
-				print(line)
-				i = 0
-	vprint("Data gotten! Closing file", 0)
-	executionTimer(start_time)
-	return file1lines
-	
+
 '''
 Takes a time, and subtracts it from the current time.
 '''
@@ -174,30 +124,65 @@ def executionTimer(startTime = None):
 	elif exe_time > 600:	#if above 10 minutes, show by minutes
 		vprint("<< {} minutes >>".format(exe_time/60), -1)
 	else:
-		vprint("<< {} seconds >>" .format(exe_time), -1)
-		
-'''
-Looks through each line of a list, adding any line containing the
- keyword (obtained via user input or argument) to another list.
-The list is returned at the end of the function.
-'''
-def parseList(file1lines, searchterm=None):
-	if searchterm == None:
-		searchTerm = input("Type a keyword to search for...\n> ")
-	termsFound = []
-	for line in file1lines:
-		if searchTerm in line:
-			termsFound.append(line)
-	return termsFound
-
+		vprint("<< {} seconds >>".format(exe_time), -1)
+	
+#get keyword(s)
+def getKeywords():
+	vprint("Hit enter without typing anything else to finish inputting strings.", 1)
+	keywordList = []
+	while True:
+		keyword = input()
+		if not keyword:
+			return keywordList
+		keywordList.append(keyword)
+	
+#read file and parse lines
+def readAndParseFile(fileName):
+	#initalize workers equal to corecount
+	#	might not be the smartest way, but its a start
+	coreCount = len(os.sched_getaffinity(0))
+	print(coreCount)
+	jobs = []
+	print(os.path.getsize(fileName))
+	for i in range(coreCount):
+		#os.path.getsize(fileName) / coreCount * (i+1)
+		p = multiprocessing.Process(target=workerRead, args=(i, coreCount, fileName, math.ceil(os.path.getsize(fileName) / coreCount)))
+		jobs.append(p)
+		p.start()
+	while True:
+		print(jobs)
+		time.sleep(5)
+			
+def workerRead(workerNum, numWorkers, fileName, bytesToRead):
+	print('Worker: ', workerNum+1, '/', numWorkers, ' | ', fileName, ' | ', bytesToRead)
+	with open(fileName, 'r') as f:
+		workerLines = []
+		mm = mmap.mmap(f.fileno(), bytesToRead, prot=mmap.PROT_READ)
+		#worker start 1 = bytesToRead*1
+		#worker start 2 = bytesToRead*2
+		#worker start 3 = bytesToRead*3
+		print(bytesToRead*workerNum)
+		mm.seek(bytesToRead*workerNum)
+		tempWord = mm.read(bytesToRead)
+		for i in re.finditer(r'([^\r\n]*)(\r?\n)', str(tempWord)):
+			line = i.group(1)
+		print(len(workerLines))
+		mm.close()
+		return workerLines
 '''
 <<Main Method>>
 '''
 
+readAndParseFile("examples/http.log")
+
+
+'''
+vprint(args, -1)
+
 if args.keyword and args.logpath and args.savename:
 	#do the program with no user input
-	file1lines = readFile(args.logpath) #reading the file
-	termsFound = parseList(file1lines, args.keyword) #parsing the file
+	file_lines = readFile(args.logpath) #reading the file
+	termsFound = parseList(file_lines, args.keyword) #parsing the file
 	saveFile(termsFound, args.savename) #saving the file
 	sys.exit()
 
@@ -215,8 +200,8 @@ for line in dir:
 	vprint(line, 1)
 	 
 file1_path=input("Type a file from above, or type a filepath...\n> ")
-file1lines = readFile(file1_path)
-termsFound = parseList(file1lines)
+file_lines = readFile(file1_path)
+termsFound = parseList(file_lines)
 print(str(len(termsFound)) + " instances found")
 while True:
 	choice = input("What do you want to do with these lines?"
@@ -243,8 +228,9 @@ while True:
 				break
 	elif choice.lower() == 'c':
 		file1_path=input("Type a filepath...\n> ")
-		file1lines = readFile(file1_path)
-		termsFound = parseList(file1lines)
+		file_lines = readFile(file1_path)
+		termsFound = parseList(file_lines)
 		print(str(len(termsFound)) + " instances found")
 	else:
 		print("choose something else")
+'''

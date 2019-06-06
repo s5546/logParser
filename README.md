@@ -47,10 +47,14 @@ Known bugs:
 		does NOT happen with http.log (1.4gb) from the MACCDC2012 dataset
 	
 	might be related to cleanup at the end of the program?
+	
+- for that matter the entire thing's slow
 
 - "-l" switch only accepts relative paths, not absolute paths
 
 	Accepts absolute paths when there's an equals between the -l and the path
+	
+
 
 ----
 
@@ -84,7 +88,7 @@ options menu
 
 	Where to save to?
 	
-	
+	How to sort the lines?
 	
 clean up
 
