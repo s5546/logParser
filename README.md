@@ -35,15 +35,55 @@ switches:
 	
 	2 v's or more shows debug info
 
+----
+Known bugs:
 
+-Extremely slow exiting when log file exists in swap space
+
+		Reproducable using conn.log (2.7gb) from www.secrepo.com, from the dataset MACCDC2012
+
+		also happens with a personal CSV (3.3gb)
+	
+		does NOT happen with http.log (1.4gb) from the MACCDC2012 dataset
+	
+	might be related to cleanup at the end of the program?
+
+- "-l" switch only accepts relative paths, not absolute paths
+
+	Accepts absolute paths when there's an equals between the -l and the path
 
 ----
 
 todo:
 
-make it cli friendly- pass some parameters in yaknow
+innovate
+
+	What I have is essentially a very slow version of grep that's a little more user-friendly. I need to add something more...
 	
-	-c continous scanning
+	ideas (not necessarily practical ones):
+		
+		Sorter (a-z, z-a, more?)
+		
+		Really drive home that userfriendliness
+		
+			Multithreading? Grep is not multithreaded, and while there are ways to use it with multiple threads- they're complicated, and an average end-user won't know how to use them (if they even realize multithreading is a thing)
+			
+				Maybe not TOO hard? If I can get the line count (of the file) and core count (of the cpu), maybe I could (somewhat) evenly distribute work like that? 
+			
+		Some sort of compression support?
+		
+			Native reading from tar.gz files (would be very useful on windows)
+			
+		GUI?
+		
+			Probably hell in python
+		
+options menu
+
+	(make these settings persistent somehow)
+
+	Where to save to?
+	
 	
 	
 clean up
@@ -58,8 +98,6 @@ clean up
 	
 	
 QoL
-
-	dont have so many exceptions
 	
 	there's probably optimizations everywhere to be made
 

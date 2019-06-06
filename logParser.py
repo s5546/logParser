@@ -22,10 +22,11 @@
 
 
 import sys, os, argparse, platform, time
+from pathlib import Path
 parser = argparse.ArgumentParser(description='Choose a keyword, '
 		+ 'logfile, and/or username..', prefix_chars='-/')
 parser.add_argument('-k', '--keyword', help='a keyword to search for')
-parser.add_argument('-l', '--logpath', help='the path to the logfile')
+parser.add_argument('-l', '--logpath', help='the path to the logfile', type=Path)
 parser.add_argument('-s', '--savename', help='the name for the parsed log')
 parser.add_argument('-f', '--force', help="remove safety checks", action="store_true")
 parser.add_argument('-x', '--nofun', help="stops the fun by removing the spinner", action="store_true")
@@ -34,8 +35,9 @@ osGroup.add_argument('-u', '--unix', help="forces unix OS detection", action="st
 osGroup.add_argument('-w', '--windows', help="forces windows OS detection", action="store_true")
 verboistyGroup = parser.add_mutually_exclusive_group()
 verboistyGroup.add_argument('-v', '--verbose', help="intensifies console output", action="count")
-verboistyGroup.add_argument('-q', '--quiet', help="remove safety checks", action="count")
+verboistyGroup.add_argument('-q', '--quiet', help="reduces console output", action="count")
 args = parser.parse_args()
+print(args)
 
 if not args.force:
 	import psutil #you'll have to install this using pip3
@@ -63,6 +65,7 @@ if quiet, only print when priority is higher than quiet level
  (eg. 'q' will print 2 and up, 'qq' will print 3 and up...)
 if verbose, print when priority level is higher than 1 - verbose level
  (eg. 'v' will print 0 and up, 'vv' will print -1 and up...)
+if neither, print when verbosity is 1 or higher
 
 3+	: important (exceptions, etc)									<qq>
 2	: program operation info (eg. prompting user, posting status...)<q>
@@ -86,7 +89,9 @@ def vprint(printString, priority = 0):
 '''
 adds a neat little spinning line, to let the user know the program
  is still running.
-Program execution is slower with this on.
+Program execution is slower with this on. Like, 3x slower.
+ I need to do something with multiprocessing to fix that, but I'm not
+  completely sure how to use it. It will be fixed, eventually.
 It can be turned off with the x switch, but that's no fun.
 Needs a global int named "state".
 '''
@@ -96,10 +101,10 @@ def spinningLoad():
 	if args.nofun:
 		return
 	spinner = {
-		1: '|',
-		2: '/',
-		3: '-',
-		4: '\\'
+		1: 'v',
+		2: '<',
+		3: '^',
+		4: '>'
 	}
 	if state == 4:
 		state = 1
@@ -126,39 +131,48 @@ def readFile(filepath):
 		statinfo = os.stat(filepath)
 		mem=psutil.virtual_memory()
 		swapmem=psutil.swap_memory()
-		if (statinfo.st_size > mem.total):
+		if (statinfo.st_size > mem.available+swapmem.free):
 			vprint("File larger than memory space." 
-					+ "\nEither upgrade your computer, or allocate more swap"
-					+ " space to process this (albeit slowly).", 3) 
+					+ "\nEither upgrade your computer, allocate more swap"
+					+ " space to process this (albeit slowly), or"
+					+ "\nclose some programs.", 3) 
 			return file1lines
 		elif (statinfo.st_size > mem.available):
 			print("File size: {s} \t\t Free RAM + Swap: {f}".format(s=statinfo.st_size, f=(swapmem.free+mem.available)))
 			choice=input('This file is larger than your RAM, but may be small'
 							+ ' enough to fit in swap. This is probably '
-							+ 'a bad idea. Continue? (y/n)\n> ', 3)
+							+ 'a bad idea. Continue? (y/n)\n> ')
 			if (choice.lower() == 'n'):
 				return file1lines
 	vprint("Reading lines, please wait...", 2)
-	start_time = time.time()
+	start_time = executionTimer()
 	word = ''
+	if args.verbose > 2:
+		i = 0
 	for line in file1:
 		file1lines.append(line)
 		if not args.nofun:
 			spinningLoad()
+		if args.verbose > 2:
+			i += 1
+			if i == 100000000:
+				print(line)
+				i = 0
 	vprint("Data gotten! Closing file", 0)
-	executionTimer(start_time, time.time())
+	executionTimer(start_time)
 	return file1lines
 	
 '''
-Takes two times, and subtracts the first from the second.
- What's left over represents how long something took to execute.
+Takes a time, and subtracts it from the current time.
 '''
-def executionTimer(startTime, endTime):
-	exe_time = endTime - startTime
+def executionTimer(startTime = None):
+	if startTime == None:
+		return time.time()
+	exe_time = time.time() - startTime
 	if exe_time > 7200:	#if above 2 hrs, show by hours
-		vprint("<< {} hours >>\n(multiply by 60 to get seconds)".format(exe_time/60), -1)
+		vprint("<< {} hours >>".format(exe_time/3600), -1)
 	elif exe_time > 600:	#if above 10 minutes, show by minutes
-		vprint("<< {} minutes >>\nmultiply by 10 to get seconds".format(exe_time/10), -1)
+		vprint("<< {} minutes >>".format(exe_time/60), -1)
 	else:
 		vprint("<< {} seconds >>" .format(exe_time), -1)
 		
@@ -206,9 +220,10 @@ termsFound = parseList(file1lines)
 print(str(len(termsFound)) + " instances found")
 while True:
 	choice = input("What do you want to do with these lines?"
-				+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search term"
+				+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search..."
 				+ "\n(E)xit\n> ")
 	if choice.lower() == 'e':
+		vprint("exiting...", 2)
 		sys.exit()
 	elif choice.lower() == 's':
 		choice = input("Name your file...")
@@ -221,17 +236,14 @@ while True:
 				try:
 					print(termsFound[i], end='')
 				except:
-					print("End of lines, restart (y) or end (N)?")
-					time.sleep(1)
-					choice = input("\n> ")
-					if choice.lower() == 'y':
-						currentLine = 0
-					else:
-						break
+					vprint("<<<<End of lines>>>>", 2)
+					currentLine = 0
 			choice = input("\nMore? (Y/n)\n> ")
 			if choice.lower() == 'n':
 				break
 	elif choice.lower() == 'c':
+		file1_path=input("Type a filepath...\n> ")
+		file1lines = readFile(file1_path)
 		termsFound = parseList(file1lines)
 		print(str(len(termsFound)) + " instances found")
 	else:
