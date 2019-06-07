@@ -5,7 +5,7 @@ Developed on python 3.6.7, using Geany
 
 Uses psutil, you'll have to install it using pip3 (or just use the -f flag, it gets rid of some safety measures but you wont need psutil then)
 
-Attempts to follow PEP8
+Attempts to follow PEP8, except for the parts that I don't like
 
 switches:
 
@@ -38,18 +38,6 @@ switches:
 ----
 Known bugs:
 
--Extremely slow exiting when log file exists in swap space
-
-		Reproducable using conn.log (2.7gb) from www.secrepo.com, from the dataset MACCDC2012
-
-		also happens with a personal CSV (3.3gb)
-	
-		does NOT happen with http.log (1.4gb) from the MACCDC2012 dataset
-	
-	might be related to cleanup at the end of the program?
-	
-- for that matter the entire thing's slow
-
 - "-l" switch only accepts relative paths, not absolute paths
 
 	Accepts absolute paths when there's an equals between the -l and the path
@@ -59,10 +47,6 @@ Known bugs:
 ----
 
 todo:
-
-revolutionary new idea: no individual file searching
-
-	just use grep if you want that (or find-str if you're on windows)
 
 innovate
 
@@ -85,6 +69,8 @@ innovate
 		GUI?
 		
 			Probably hell in python
+			
+		Multiple file searching?
 		
 options menu
 
@@ -96,6 +82,8 @@ options menu
 	
 	How many lines to read at one time?
 	
+	options to remove redundant lines of passwords
+	
 clean up
 
 	why my formatting succ so much pls fix, future me
@@ -103,10 +91,6 @@ clean up
 	figure out how to format python code
 	
 	why all these random variables happening everywhere
-	
-	more comments pls
-	
-	that while true loop at the bottom is disgusting i gotta fix that
 	
 	
 QoL
