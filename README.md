@@ -60,6 +60,10 @@ Known bugs:
 
 todo:
 
+revolutionary new idea: no individual file searching
+
+	just use grep if you want that (or find-str if you're on windows)
+
 innovate
 
 	What I have is essentially a very slow version of grep that's a little more user-friendly. I need to add something more...
@@ -89,6 +93,8 @@ options menu
 	Where to save to?
 	
 	How to sort the lines?
+	
+	How many lines to read at one time?
 	
 clean up
 
