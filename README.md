@@ -60,6 +60,10 @@ Known bugs:
 
 todo:
 
+revolutionary new idea: no individual file searching
+
+	just use grep if you want that (or find-str if you're on windows)
+
 innovate
 
 	What I have is essentially a very slow version of grep that's a little more user-friendly. I need to add something more...
@@ -90,6 +94,8 @@ options menu
 	
 	How to sort the lines?
 	
+	How many lines to read at one time?
+	
 clean up
 
 	why my formatting succ so much pls fix, future me
@@ -100,8 +106,14 @@ clean up
 	
 	more comments pls
 	
+	that while true loop at the bottom is disgusting i gotta fix that
+	
 	
 QoL
+
+	faster reading
+	
+		mmem is how I wanna do it, but honestly mmem scares me
 	
 	there's probably optimizations everywhere to be made
 
