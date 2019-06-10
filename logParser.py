@@ -95,6 +95,7 @@ def saveFile(listToBeWriten, name = "parsedLog"):
 	os.fsync(f.fileno())
 	f.close()
 	shutil.copy("tmpFile", name) #os.copy doesn't work across different filesystems
+	os.remove("tmpFile")
 	vprint("file saved!", 2)
 
 """
@@ -173,7 +174,7 @@ Also checks if path is a directory; if so, it reads all files in that
 Also checks if path is a compressed (tar or zip) file; if so,
  readCompressedFile() is called.
 """	
-def readFile(filepath, keywords, recursions=0):
+def readFile(filepath, keywords, recursions = 0):
 	filelines = []
 	if os.path.isdir(filepath):
 		dirList = listDirectory(filepath, returnDir=True)
