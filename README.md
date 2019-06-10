@@ -5,7 +5,7 @@ Developed on python 3.6.7, using Geany
 
 Uses psutil, you'll have to install it using pip3 (or just use the -f flag, it gets rid of some safety measures but you wont need psutil then)
 
-Attempts to follow PEP8
+Attempts to follow PEP8, except for the parts that I don't like
 
 switches:
 
@@ -17,9 +17,9 @@ switches:
 
 -u forces unix style commands even if your OS isnt unix
 
--x starts the fun by enabling the spinning loader
+-x enables the spinning load thing, making the program at least twice as fun
 
-	it's also 2-6x slower with the spinner on
+	it ALSO slows down execution by 2-6x, giving you even more time for the fun
 
 -k keywords to search through the file for
 
@@ -43,6 +43,7 @@ Known bugs:
 	Accepts absolute paths when there's an equals between the -l and the path
 	
 - Some directories are added, regardless of if they have any matches
+
 
 ----
 
@@ -73,6 +74,8 @@ innovate
 		GUI?
 		
 			Probably hell in python
+			
+		Multiple file searching?
 		
 options menu
 
@@ -83,6 +86,12 @@ options menu
 	How to sort the lines?
 	
 	How many lines to read at one time?
+  
+  options to remove redundant lines of passwords
+	
+	make directory searching non-recursive
+	
+	make multi-file logs cohesive, instead of split
 	
 clean up
 
@@ -92,17 +101,21 @@ clean up
 	
 	why all these random variables happening everywhere
 	
-	more comments pls
-	
 	
 QoL
 
 	line count suffixes
 	
 	better explanations on the -h screen
+
+	faster reading
+	
+		mmem is how I wanna do it, but honestly mmem scares me
 	
 	there's probably optimizations everywhere to be made
 
 	improve the spin loader
 		
 		threading, basically
+		
+	add file filtering to readFile()

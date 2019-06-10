@@ -31,6 +31,7 @@ import zipfile
 import tarfile
 import shutil
 import tempfile
+
 parser = argparse.ArgumentParser(description="Choose a keyword, "
 		+ "logfile, and/or username.", prefix_chars="-/")
 parser.add_argument(
@@ -240,6 +241,7 @@ def readFile(filepath, keywords, recursions=0):
 		return ["File not found"]
 	return filelines
 	
+
 """
 Takes a time, and subtracts it from the current time.
 """
@@ -308,6 +310,7 @@ def listDirectory(path = os.getcwd(), returnDir = False):
 	for line in directory:
 		pass
 		#vprint(line, 1)
+
 	if returnDir:
 		return directory
 
@@ -340,6 +343,7 @@ while True:
 		vprint("exiting...", 3)
 		#probably fine but should have verification? dont wanna delete user files
 		shutil.rmtree(tempfile.gettempdir() + "/logParserTemp/")
+
 		sys.exit()
 	elif choice.lower() == "s":
 		choice = input("Name your file...")
