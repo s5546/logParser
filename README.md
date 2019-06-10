@@ -17,9 +17,9 @@ switches:
 
 -u forces unix style commands even if your OS isnt unix
 
--x disables the spinny load thing, but why would you want to do that?
+-x starts the fun by enabling the spinning loader
 
-	i put literally minutes into coding that and you're just gonna break my heart like that? </3
+	it's also 2-6x slower with the spinner on
 
 -k keywords to search through the file for
 
@@ -108,6 +108,8 @@ clean up
 	
 	
 QoL
+
+	line count
 	
 	there's probably optimizations everywhere to be made
 
