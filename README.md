@@ -17,9 +17,9 @@ switches:
 
 -u forces unix style commands even if your OS isnt unix
 
--x disables the spinny load thing, but why would you want to do that?
+-x enables the spinning load thing, making the program at least twice as fun
 
-	i put literally minutes into coding that and you're just gonna break my heart like that? </3
+	it ALSO makes it 2-6 times as slow...
 
 -k keywords to search through the file for
 
@@ -84,6 +84,10 @@ options menu
 	
 	options to remove redundant lines of passwords
 	
+	make directory searching non-recursive
+	
+	make multi-file logs cohesive, instead of split
+	
 clean up
 
 	why my formatting succ so much pls fix, future me
@@ -95,6 +99,8 @@ clean up
 	
 QoL
 
+	append linecount to start of each line
+
 	faster reading
 	
 		mmem is how I wanna do it, but honestly mmem scares me
@@ -104,3 +110,5 @@ QoL
 	improve the spin loader
 		
 		threading, basically
+		
+	add file filtering to readFile()

@@ -27,6 +27,8 @@ import argparse
 import platform
 import time
 import mmap
+import zipfile
+import tarfile
 import shutil
 parser = argparse.ArgumentParser(description="Choose a keyword, "
 		+ "logfile, and/or username.", prefix_chars="-/")
@@ -106,18 +108,18 @@ if neither, print when verbosity is 1 or higher
 0	: info (opened file, closed file...)							<v>
 less: debug															<vv>
 """
-def vprint(printString, priority = 0):
+def vprint(printString, priority = 0, sep = " ", end = "\n"):
 	if priority >= 3:
-		print(printString)
+		print(printString, sep, end)
 	else:
 		if args.verbose:
 			if priority >= 1 - args.verbose:
-				print(printString)
+				print(printString, sep, end)
 		elif args.quiet:
 			if args.quiet < priority:
-				print(printString)
+				print(printString, sep, end)
 		elif priority > 0:
-			print(printString)
+			print(printString, sep, end)
 
 """
 adds a neat little spinning line, to let the user know the program
@@ -125,7 +127,6 @@ adds a neat little spinning line, to let the user know the program
 Program execution is slower with this on. Like, 3-6x slower.
  I need to do something with multiprocessing to fix that, but I"m not
   completely sure how to use it. It will be fixed, eventually.
-It can be turned off with the x switch, but that"s no fun.
 Needs a global int named "state".
 """
 state = 1
@@ -167,6 +168,8 @@ Then proceeds to read the file. Each line is checked for keywords, and
  then placed in a list if it matches any of the keywords.
 Also checks if path is a directory; if so, it reads all files in that
  directory.
+Also checks if path is a compressed (tar or zip) file; if so,
+ readCompressedFile() is called.
 """	
 def readFile(filepath, keywords, recursions=0):
 	filelines = []
@@ -177,6 +180,12 @@ def readFile(filepath, keywords, recursions=0):
 			filelines.append("{{" + str(recursions) + " recursion(s) deep" + "}}\n")
 			filelines.extend(readFile(filepath + "/" + files, keywords, recursions+1))
 		return filelines
+	elif zipfile.is_zipfile(filepath):
+		return readCompressedFile(filepath, keywords, "zip")
+	elif tarfile.is_tarfile(filepath):
+		return readCompressedFile(filepath, keywords, "tar")
+	print("normal file")
+	#elif 
 	vprint("Opening file: "+filepath, -1)
 	#actual line reading
 	vprint("Reading lines, please wait...", 2)
@@ -216,13 +225,58 @@ def readFile(filepath, keywords, recursions=0):
 	except UnicodeDecodeError:
 		vprint("Skipping bytefile...", 2)
 		return ["File is a bytefile- UTF-8 can't decode bytefiles, skipped"]
-	"""
-	except Exception as e:
-		vprint(e, -1)
-		return readFile(input("Error reading file: Check the name/filepath, and your "
-		+ "permissions. \nChoose a different file:\n> "))
-	vprint("Data gotten! Closing file", 0)
-	"""
+	except PermissionError:
+		vprint("Can't open file- permission denied", 3)
+		return ["Permission denied for this file"]
+	except FileNotFoundError:
+		vprint("File not found...", 3)
+		return ["File not found"]
+	return filelines
+	
+	
+'''
+(Optionally) checks if the file is compressed, and then attempts to read
+ all files within.
+'''
+def readCompressedFile(compressedFilePath, keywords, compressionType):
+	filelines = []
+	if compressionType == "zip":
+		with zipfile.ZipFile(compressedFilePath, "r") as zipped:
+			zipList = zipped.namelist()
+			for files in zipList:
+				with zipped.open(files) as f:
+					filelines.append("\n-----<<<" + (compressedFilePath + "/" + files) + ">>>-----\n")
+					while True:
+						lineString = str(f.readline(), 'utf-8')
+						print(lineString)
+						if not lineString:
+							break
+						keyFound = False
+						for key in keywords:
+							if key in lineString:
+								keyFound = True
+						if keyFound:
+							filelines.append(lineString)
+	elif compressionType == "tar":
+		with tarfile.open(compressedFilePath, "r:*") as tarred:
+			for files in tarred:
+				with tarred.extractfile(files) as f:
+					while True:
+						#reads all lines fine, but errors out after the last one-
+						#it tries to read a part that doesnt exist
+						try:
+							lineString = str(f.readline(), 'utf-8')
+						except UnicodeDecodeError:
+							return filelines
+						if not lineString:
+							break
+						keyFound = False
+						for key in keywords:
+							if key in lineString:
+								keyFound = True
+						if keyFound:
+							print(lineString)
+							filelines.append(lineString)
 	return filelines
 	
 """
@@ -252,7 +306,7 @@ def viewLines(filelines):
 			try:
 				print(filelines[i], end="")
 			except:
-				vprint("<<<<End of lines>>>>", 2)
+				vprint("<<<<End of lines>>>>", 2, end="")
 				currentLine = 0
 		choice = input("\nMore? (Y/n)\n> ")
 		if choice.lower() == "n":
