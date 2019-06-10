@@ -38,23 +38,11 @@ switches:
 ----
 Known bugs:
 
--Extremely slow exiting when log file exists in swap space
-
-		Reproducable using conn.log (2.7gb) from www.secrepo.com, from the dataset MACCDC2012
-
-		also happens with a personal CSV (3.3gb)
-	
-		does NOT happen with http.log (1.4gb) from the MACCDC2012 dataset
-	
-	might be related to cleanup at the end of the program?
-	
-- for that matter the entire thing's slow
-
 - "-l" switch only accepts relative paths, not absolute paths
 
 	Accepts absolute paths when there's an equals between the -l and the path
 	
-
+- Some directories are added, regardless of if they have any matches
 
 ----
 
@@ -109,7 +97,9 @@ clean up
 	
 QoL
 
-	line count
+	line count suffixes
+	
+	better explanations on the -h screen
 	
 	there's probably optimizations everywhere to be made
 
