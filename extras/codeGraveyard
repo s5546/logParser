@@ -30,3 +30,187 @@ if not line == '\n':
 if args.quiet > 2:
 	text_trap = io.StringIO()
 	sys.stdout = text_trap
+	
+#first experiment with multithreading. I think the problem is in how I'm
+#using .join()- this was the only place i was calling that,
+#everywhere else i was still directly calling this function.
+if not args.nofun:
+	from multiprocessing import Process
+	state = 1
+	def spinningLoad():
+		global state
+		if args.nofun:
+			return
+		spinner = {
+			1: '|',
+			2: '/',
+			3: '-',
+			4: '\\'
+		}
+		if state == 4:
+			state = 1
+		else:
+			state += 1
+		print('\b' + spinner.get(state, ''), end="\r")
+	spinProcess = Process(target=spinningLoad, args=())
+	spinProcess.start()
+	spinProcess.join()
+	
+	
+##old read and parse functions. They work, but they perform FAR too slowly.
+'''
+Reads a file located at a given path.
+Checks that the file can actually be read without running out of memory
+ (unless the f or q flag has been set)
+Then proceeds to read the file and place each line in a list, one by one
+'''	
+def readFile(filepath):
+	file_lines = []
+	vprint("Opening file: "+filepath, -1)
+	try:
+		with open(filepath) as file_:
+			if not args.force or not args.quiet:
+				statinfo = os.stat(filepath)
+				mem=psutil.virtual_memory()
+				swapmem=psutil.swap_memory()
+				if (statinfo.st_size > mem.available+swapmem.free):
+					vprint("File larger than memory space." 
+							+ "\nEither upgrade your computer, allocate more swap"
+							+ " space to process this (albeit slowly), or"
+							+ "\nclose some programs.", 3) 
+					return file_lines
+				elif (statinfo.st_size > mem.available):
+					print("File size: {s} \t\t Free RAM + Swap: {f}".format(s=statinfo.st_size, f=(swapmem.free+mem.available)))
+					choice=input('This file is larger than your RAM, but may be small'
+									+ ' enough to fit in swap. This is probably '
+									+ 'a bad idea. Continue? (y/n)\n> ')
+					if (choice.lower() == 'n'):
+						return file_lines
+			vprint("Reading lines, please wait...", 2)
+			start_time = executionTimer()
+			word = ''
+			if args.verbose:
+				if args.verbose > 2:
+					i = 0
+			for line in file_:
+				file_lines.append(line)
+				if not args.nofun:
+					spinningLoad()
+				if args.verbose:
+					if args.verbose > 2:
+						i += 1
+						if i == 100000000:
+							print(line)
+							i = 0
+			vprint("Data gotten! Closing file", 0)
+	except Exception as e:
+		print(e)
+		return readFile(input("Error reading file: Check the name/filepath, and your "
+		+ "permissions. \nChoose a different file:\n> "))
+		#this recursion might be a bad idea idk
+	executionTimer(start_time)
+	return file_lines
+	
+'''
+Looks through each line of a list, adding any line containing the
+ keyword (obtained via user input or argument) to another list.
+The list is returned at the end of the function.
+'''
+def parseList(file_lines, searchterm=None):
+	if searchterm == None:
+		searchTerm = input("Type a keyword to search for...\n> ")
+	termsFound = []
+	for line in file_lines:
+		if searchTerm in line:
+			termsFound.append(line)
+	return termsFound
+	
+	
+#assorted snippets from multiprocessing
+#os.path.getsize(fileName) / coreCount * (i+1)
+		#p = multiprocessing.Process(target=workerRead, args=(i, coreCount, fileName, math.ceil(os.path.getsize(fileName) / coreCount)))
+
+
+a monstrosity
+#read file and parse lines
+def readAndParseFile(fileName):
+	#initalize workers equal to corecount
+	#	might not be the smartest way, but its a start
+	coreCount = len(os.sched_getaffinity(0))
+	print(coreCount)
+	jobs = []
+	print()
+	for i in range(coreCount):
+		p = multiprocessing.Process(target=workerRead, args=(i, coreCount, fileName, math.ceil(os.path.getsize(fileName) / coreCount)))
+		jobs.append(p)
+		p.start()
+	while True:
+		print(jobs)
+		time.sleep(5)
+			
+def workerRead(workerNum, numWorkers, fileName, bytesToRead):
+	print('Worker: ', workerNum+1, '/', numWorkers, ' | ', fileName, ' | ', bytesToRead)
+	filesize = os.path.getsize(fileName)
+	with open(fileName, 'r') as f:
+		workerLines = []
+		mm = mmap.mmap(f.fileno(), filesize, prot=mmap.PROT_READ)
+		#worker start 1 = bytesToRead*1
+		#worker start 2 = bytesToRead*2
+		#worker start 3 = bytesToRead*3
+		print(bytesToRead*workerNum)
+		mm.seek(bytesToRead*workerNum)
+		tempWord = mm.read(bytesToRead)
+		for i in re.finditer(r'([^\r\n]*)(\r?\n)', str(tempWord)):
+			line = i.group(1)
+			workerLines.append(line)
+		print(len(workerLines))
+		mm.close()
+		return workerLines
+
+'''
+Checks how the file is compressed, and then attempts to read all files 
+ within.
+ 
+Was meant to read zip and tar files without extracting- I was trying to save on disk IOPS. Almost worked, too- Just needed some better parsing of the zip/tar files. Maybe some other day.
+'''
+def readCompressedFile(compressedFilePath, keywords, compressionType):
+	filelines = []
+	if compressionType == "zip":
+		with zipfile.ZipFile(compressedFilePath, "r") as zipped:
+			zipList = zipped.namelist()
+			for files in zipList:
+				with zipped.open(files) as f:
+					filelines.append("\n-----<<<" + (compressedFilePath + "/" + files) + ">>>-----\n")
+					while True:
+						lineString = str(f.readline(), 'utf-8')
+						print(lineString)
+						if not lineString:
+							break
+						keyFound = False
+						for key in keywords:
+							if key in lineString:
+								keyFound = True
+						if keyFound:
+							filelines.append(lineString)
+	elif compressionType == "tar":
+		with tarfile.open(compressedFilePath, "r:*") as tarred:
+			for files in tarred:
+				print(files)
+				with tarred.extractfile(files) as f:
+					while True:
+						#reads all lines fine, but errors out after the last one-
+						#it tries to read a part that doesnt exist
+						try:
+							lineString = str(f.readline(), 'utf-8') 
+						except UnicodeDecodeError: #this is not a good way to stop reading
+							return filelines
+						if not lineString:
+							break
+						keyFound = False
+						for key in keywords:
+							if key in lineString:
+								keyFound = True
+						if keyFound:
+							print(lineString)
+							filelines.append(lineString)
+	return filelines

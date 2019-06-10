@@ -30,6 +30,8 @@ import mmap
 import zipfile
 import tarfile
 import shutil
+import tempfile
+
 parser = argparse.ArgumentParser(description="Choose a keyword, "
 		+ "logfile, and/or username.", prefix_chars="-/")
 parser.add_argument(
@@ -181,10 +183,16 @@ def readFile(filepath, keywords, recursions=0):
 			filelines.extend(readFile(filepath + "/" + files, keywords, recursions+1))
 		return filelines
 	elif zipfile.is_zipfile(filepath):
-		return readCompressedFile(filepath, keywords, "zip")
+		with zipfile.ZipFile(filepath, "r") as zipped:
+			#temp directory / this program's temp / the zip file / *files inside
+			tempPath = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
+			zipped.extractall(path = tempPath)
+			return readFile(tempPath, keywords, recursions+1)
 	elif tarfile.is_tarfile(filepath):
-		return readCompressedFile(filepath, keywords, "tar")
-	print("normal file")
+		with tarfile.open(filepath, "r:*") as tarred:
+			tempPath = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
+			tarred.extractall(path = tempPath)
+			return readFile(tempPath, keywords, recursions+1)
 	#elif 
 	vprint("Opening file: "+filepath, -1)
 	#actual line reading
@@ -233,52 +241,7 @@ def readFile(filepath, keywords, recursions=0):
 		return ["File not found"]
 	return filelines
 	
-	
-'''
-(Optionally) checks if the file is compressed, and then attempts to read
- all files within.
-'''
-def readCompressedFile(compressedFilePath, keywords, compressionType):
-	filelines = []
-	if compressionType == "zip":
-		with zipfile.ZipFile(compressedFilePath, "r") as zipped:
-			zipList = zipped.namelist()
-			for files in zipList:
-				with zipped.open(files) as f:
-					filelines.append("\n-----<<<" + (compressedFilePath + "/" + files) + ">>>-----\n")
-					while True:
-						lineString = str(f.readline(), 'utf-8')
-						print(lineString)
-						if not lineString:
-							break
-						keyFound = False
-						for key in keywords:
-							if key in lineString:
-								keyFound = True
-						if keyFound:
-							filelines.append(lineString)
-	elif compressionType == "tar":
-		with tarfile.open(compressedFilePath, "r:*") as tarred:
-			for files in tarred:
-				with tarred.extractfile(files) as f:
-					while True:
-						#reads all lines fine, but errors out after the last one-
-						#it tries to read a part that doesnt exist
-						try:
-							lineString = str(f.readline(), 'utf-8')
-						except UnicodeDecodeError:
-							return filelines
-						if not lineString:
-							break
-						keyFound = False
-						for key in keywords:
-							if key in lineString:
-								keyFound = True
-						if keyFound:
-							print(lineString)
-							filelines.append(lineString)
-	return filelines
-	
+
 """
 Takes a time, and subtracts it from the current time.
 """
@@ -345,7 +308,9 @@ Lists all files in a given directory.
 def listDirectory(path = os.getcwd(), returnDir = False):
 	directory = os.listdir(path)
 	for line in directory:
-		vprint(line, 1)
+		pass
+		#vprint(line, 1)
+
 	if returnDir:
 		return directory
 
@@ -376,6 +341,9 @@ while True:
 				+ "\n(E)xit\n> ")
 	if choice.lower() == "e":
 		vprint("exiting...", 3)
+		#probably fine but should have verification? dont wanna delete user files
+		shutil.rmtree(tempfile.gettempdir() + "/logParserTemp/")
+
 		sys.exit()
 	elif choice.lower() == "s":
 		choice = input("Name your file...")

@@ -19,7 +19,7 @@ switches:
 
 -x enables the spinning load thing, making the program at least twice as fun
 
-	it ALSO makes it 2-6 times as slow...
+	it ALSO slows down execution by 2-6x, giving you even more time for the fun
 
 -k keywords to search through the file for
 
@@ -42,11 +42,16 @@ Known bugs:
 
 	Accepts absolute paths when there's an equals between the -l and the path
 	
+- Some directories are added, regardless of if they have any matches
 
 
 ----
 
 todo:
+
+revolutionary new idea: no individual file searching
+
+	just use grep if you want that (or find-str if you're on windows)
 
 innovate
 
@@ -81,8 +86,8 @@ options menu
 	How to sort the lines?
 	
 	How many lines to read at one time?
-	
-	options to remove redundant lines of passwords
+  
+  options to remove redundant lines of passwords
 	
 	make directory searching non-recursive
 	
@@ -99,7 +104,9 @@ clean up
 	
 QoL
 
-	append linecount to start of each line
+	line count suffixes
+	
+	better explanations on the -h screen
 
 	faster reading
 	
