@@ -5,7 +5,7 @@ Developed on python 3.6.7, using Geany
 
 Uses psutil, you'll have to install it using pip3 (or just use the -f flag, it gets rid of some safety measures but you wont need psutil then)
 
-Attempts to follow PEP8, except for the parts that I don't like
+Attempts to follow PEP8, except for the parts that I don't like and also the parts I forget about
 
 switches:
 
@@ -44,14 +44,9 @@ Known bugs:
 	
 - Some directories are added, regardless of if they have any matches
 
-
 ----
 
 todo:
-
-revolutionary new idea: no individual file searching
-
-	just use grep if you want that (or find-str if you're on windows)
 
 innovate
 
@@ -65,17 +60,9 @@ innovate
 		
 			Multithreading? Grep is not multithreaded, and while there are ways to use it with multiple threads- they're complicated, and an average end-user won't know how to use them (if they even realize multithreading is a thing)
 			
-				Maybe not TOO hard? If I can get the line count (of the file) and core count (of the cpu), maybe I could (somewhat) evenly distribute work like that? 
-			
-		Some sort of compression support?
-		
-			Native reading from tar.gz files (would be very useful on windows)
-			
 		GUI?
 		
 			Probably hell in python
-			
-		Multiple file searching?
 		
 options menu
 

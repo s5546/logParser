@@ -32,29 +32,50 @@ import tarfile
 import shutil
 import tempfile
 
-parser = argparse.ArgumentParser(description="Choose a keyword, "
-		+ "logfile, and/or username.", prefix_chars="-/")
-parser.add_argument(
-	"-l", "--logpath", help="the path to the logfile", type=str
+parser = argparse.ArgumentParser(
+	description="Takes UTF-8 decodable logs (aka nearly all logs) and reads"
+	+ " them, scanning for keywords.", 
+	prefix_chars="-/"
 )
 parser.add_argument(
-	"-s", "--savename", help="the name for the parsed log"
+	"-l", 
+	"--logpath", 
+	help = "the path to the logfile. If your log is in a different directory,"
+	+ " use an equals between the -s/--savename and your path"
+	+ " (aka an absolute path)."
+	+ " Supports files, directories, zip files, and tar files."
+	+ " Recursively searches, so use with caution." ,
+	type = str,
+	metavar = "<log path>"
+)
+parser.add_argument(
+	"-s", 
+	"--savename", 
+	help = "What to save the parsed log as. If you want it in a different"
+	+ " directory, use an equals between the -s/--savename and your path"
+	+ " (aka an absolute path).",
+	metavar = "<save name>"
 	)
 parser.add_argument(
 	"-r", 
 	"--risky", 
-	help="does riskier operations for potentially more speed", 
-	action="store_true"
+	help = "does riskier operations for potentially more speed. "
+	+ " This actually doesn't do much at the moment...", 
+	action = "store_true"
 )
 parser.add_argument(
-	"-f", "--force", help="remove safety checks", action="store_true"
+	"-f",
+	"--force",
+	help="removes safety checks, and (if permissions are high enough)"
+	+ " always does certain tasks.",
+	action="store_true"
 )
 parser.add_argument(
 	"-x", 
 	"--fun", 
 	help="starts the fun by adding the spinner! "
-			+ "its so fun, your cpu will forget to do work- "
-			+ "execution is 2-6x slower with this on, beware...",
+			+ "its so fun, your cpu will forget to do work-"
+			+ " execution is 2-6x slower with this on, beware",
 	action="store_true"
 )
 osGroup = parser.add_mutually_exclusive_group()
@@ -66,13 +87,25 @@ osGroup.add_argument(
 )
 verboistyGroup = parser.add_mutually_exclusive_group()
 verboistyGroup.add_argument(
-	"-v", "--verbose", help="intensifies console output", action="count"
+	"-v",
+	"--verbose",
+	help="intensifies console output. Use more v's for more output."
+	+ " 3+ v's will print *e v e r y t h i n g* .",
+	action="count"
 )
 verboistyGroup.add_argument(
-	"-q", "--quiet", help="reduces console output", action="count"
+	"-q", 
+	"--quiet", 
+	help="reduces console output. Use more q's for less output."
+	+ " Once I actually implement it, 3+ q's will disable stdout.", 
+	action="count"
 )
 parser.add_argument(
-	"-k", "--keyword", help="keywords to search for", nargs="+"
+	"-k", 
+	"--keyword", 
+	help="keywords to search for. Put this at the end of your command,"
+	+ " and then enter as many keywords as you want.", 
+	nargs=argparse.REMAINDER
 )
 args = parser.parse_args()
 
@@ -231,8 +264,8 @@ def readFile(filepath, keywords, recursions = 0):
 					filelines.append(lineString)
 				spinningLoad()
 		executionTimer(start_time)
-	except UnicodeDecodeError:
-		vprint("Skipping bytefile...", 2)
+	except UnicodeDecodeError as e:
+		vprint(e, 2)
 		return ["File is a bytefile- UTF-8 can't decode bytefiles, skipped"]
 	except PermissionError:
 		vprint("Can't open file- permission denied", 3)
@@ -310,7 +343,7 @@ def listDirectory(path = os.getcwd(), returnDir = False):
 	directory = os.listdir(path)
 	for line in directory:
 		pass
-		#vprint(line, 1)
+		vprint(line, 1)
 
 	if returnDir:
 		return directory
@@ -344,7 +377,6 @@ while True:
 		vprint("exiting...", 3)
 		#probably fine but should have verification? dont wanna delete user files
 		shutil.rmtree(tempfile.gettempdir() + "/logParserTemp/")
-
 		sys.exit()
 	elif choice.lower() == "s":
 		choice = input("Name your file...")
