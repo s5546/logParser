@@ -63,7 +63,8 @@ Example files included:
 	
 	supposedly uncompresses to 800gb
 
-For good logs to test with, try https://www.secrepo.com/
+https://www.secrepo.com/ has some pretty good logs if ya need em
+
 ----
 
 todo:
