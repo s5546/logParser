@@ -26,7 +26,6 @@ import os
 import argparse
 import platform
 import time
-import mmap
 import zipfile
 import tarfile
 import shutil
@@ -78,22 +77,22 @@ parser.add_argument(
 			+ " execution is 2-6x slower with this on, beware",
 	action="store_true"
 )
-osGroup = parser.add_mutually_exclusive_group()
-osGroup.add_argument(
+os_group = parser.add_mutually_exclusive_group()
+os_group.add_argument(
 	"-u", "--unix", help="forces unix OS detection", action="store_true"
 )
-osGroup.add_argument(
+os_group.add_argument(
 	"-w", "--windows", help="forces windows OS detection", action="store_true"
 )
-verboistyGroup = parser.add_mutually_exclusive_group()
-verboistyGroup.add_argument(
+verboisty_group = parser.add_mutually_exclusive_group()
+verboisty_group.add_argument(
 	"-v",
 	"--verbose",
 	help="intensifies console output. Use more v's for more output."
 	+ " 3+ v's will print *e v e r y t h i n g* .",
 	action="count"
 )
-verboistyGroup.add_argument(
+verboisty_group.add_argument(
 	"-q", 
 	"--quiet", 
 	help="reduces console output. Use more q's for less output."
@@ -118,7 +117,7 @@ saves to a temporary file in the same directory, and once its verified
  the tmpfile is renamed to a user defined value
  (default is "parsedLog")
 """
-def saveFile(listToBeWriten, name = "parsedLog"):
+def save_file(listToBeWriten, name = "parsedLog"):
 	f = open("tmpFile", "w")
 	vprint("saving file...", 2)
 	for line in listToBeWriten:
@@ -140,7 +139,7 @@ if neither, print when verbosity is 1 or higher
 
 3+	: important (exceptions, etc)									<qq>
 2	: program operation info (eg. prompting user, posting status...)<q>
-1	: operation info (eg. listing directories, progress bars...)	<default min>
+1	: operation info (eg. listing directories, progress bars...)	<default>
 0	: info (opened file, closed file...)							<v>
 less: debug															<vv>
 """
@@ -160,22 +159,31 @@ def vprint(printString, priority = 0, sep = " ", end = "\n"):
 """
 adds a neat little spinning line, to let the user know the program
  is still running.
-Program execution is slower with this on. Like, 3-6x slower.
- I need to do something with multiprocessing to fix that, but I"m not
+Program execution is slower with this on. Like, 2-6x slower.
+ I need to do something with multiprocessing to fix that, but I'm not
   completely sure how to use it. It will be fixed, eventually.
-Needs a global int named "state".
+Needs a global int named "state", but I'm looking for a not-dumb way to
+ use local variables instead
 """
 state = 1
-def spinningLoad():
+def spinningLoad(version = 0):
 	global state
 	if not args.fun:
 		return
-	spinner = {
+	if version == 0:
+		spinner = {
 		1: "v",
 		2: "<",
 		3: "^",
 		4: ">"
-	}
+		}
+	elif version == 1:
+		spinner = {
+			1: "/",
+			2: "-",
+			3: "\\",
+			4: "|"
+		}
 	if state == 4:
 		state = 1
 	else:
@@ -186,7 +194,7 @@ def spinningLoad():
 Gets keywords from stdin until the user enters an empty string.
 Returns the list of keywords entered.
 """
-def getKeywords():
+def get_keywords():
 	vprint("Hit enter without typing anything else to finish inputting strings.", 1)
 	keywordList = []
 	while True:
@@ -204,34 +212,33 @@ Then proceeds to read the file. Each line is checked for keywords, and
  then placed in a list if it matches any of the keywords.
 Also checks if path is a directory; if so, it reads all files in that
  directory.
-Also checks if path is a compressed (tar or zip) file; if so,
- readCompressedFile() is called.
+Also checks if path is a compressed (tar or zip) file.
 """	
-def readFile(filepath, keywords, recursions = 0):
+def read_file(filepath, keywords, recursions = 0):
 	filelines = []
-	if os.path.isdir(filepath):
-		dirList = listDirectory(filepath, returnDir=True)
-		for files in dirList: #fully recursive, be careful
-			filelines.append("\n-----<<<" + (filepath + "/" + files) + ">>>-----\n")
-			filelines.append("{{" + str(recursions) + " recursion(s) deep" + "}}\n")
-			filelines.extend(readFile(filepath + "/" + files, keywords, recursions+1))
-		return filelines
-	elif zipfile.is_zipfile(filepath):
-		with zipfile.ZipFile(filepath, "r") as zipped:
-			#temp directory / this program's temp / the zip file / *files inside
-			tempPath = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
-			zipped.extractall(path = tempPath)
-			return readFile(tempPath, keywords, recursions+1)
-	elif tarfile.is_tarfile(filepath):
-		with tarfile.open(filepath, "r:*") as tarred:
-			tempPath = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
-			tarred.extractall(path = tempPath)
-			return readFile(tempPath, keywords, recursions+1)
-	#elif 
-	vprint("Opening file: "+filepath, -1)
-	#actual line reading
-	vprint("Reading lines, please wait...", 2)
-	try:
+	currentLine = 0
+	try: #monolithic try statement incoming
+		vprint("Opening file: "+filepath, -1)
+		if os.path.isdir(filepath):
+			dirList = list_directory(filepath, returnDir=True)
+			for files in dirList: #fully recursive, be careful
+				filelines.append("\n-----<<<" + (filepath + "/" + files) + ">>>-----\n")
+				filelines.append("{{" + str(recursions) + " recursion(s) deep" + "}}\n")
+				filelines.extend(read_file(filepath + "/" + files, keywords, recursions+1))
+			return filelines
+		elif zipfile.is_zipfile(filepath):
+			with zipfile.ZipFile(filepath, "r") as zipped:
+				#temp directory / this program's temp / the zip file / *files inside
+				tempPath = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
+				zipped.extractall(path = tempPath)
+				return read_file(tempPath, keywords, recursions+1)
+		elif tarfile.is_tarfile(filepath):
+			with tarfile.open(filepath, "r:*") as tarred:
+				tempPath = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
+				tarred.extractall(path = tempPath)
+				return read_file(tempPath, keywords, recursions+1)
+		#actual line reading
+		vprint("Reading lines, please wait...", 2)
 		if not args.force and not args.quiet:
 			statinfo = os.stat(filepath)
 			mem=psutil.virtual_memory()
@@ -253,6 +260,7 @@ def readFile(filepath, keywords, recursions = 0):
 		with open(filepath, "r") as f:
 			#read the line, and check for keywords
 			while True:
+				currentLine += 1
 				lineString = f.readline()
 				if not lineString:
 					break
@@ -261,23 +269,24 @@ def readFile(filepath, keywords, recursions = 0):
 					if key in lineString:
 						keyFound = True
 				if keyFound:
-					filelines.append(lineString)
+					filelines.append(str(currentLine) + "] " + lineString)
 				spinningLoad()
 		executionTimer(start_time)
-	except UnicodeDecodeError as e:
-		vprint(e, 2)
-		return ["File is a bytefile- UTF-8 can't decode bytefiles, skipped"]
+	except UnicodeDecodeError:
+		vprint("Can't decode file; file is corrupt or binary", 2)
+		return ["File is corrupt or a binary file, skipping"]
 	except PermissionError:
 		vprint("Can't open file- permission denied", 3)
 		return ["Permission denied for this file"]
 	except FileNotFoundError:
-		vprint("File not found...", 3)
+		vprint("File not found", 3)
 		return ["File not found"]
 	return filelines
 	
 
 """
 Takes a time, and subtracts it from the current time.
+If not given a time, returns the current time.
 """
 def executionTimer(startTime = None):
 	if startTime is None:
@@ -295,7 +304,7 @@ takes a list and prints each element on its own line
 prints until the screen is 2 lines away from being filled, then prompts
  user to continue or stop
 """
-def viewLines(filelines):
+def view_lines(filelines):
 	currentLine = 0
 	while True: #emulated do-while loop
 		currentLine += os.get_terminal_size(0)[1]-2
@@ -314,7 +323,7 @@ prints out a command the user could use next time if they want to
  automate running this.
 Something tells me there's a smarter way of doing this.
 """
-def automateCommandBuilder(path, keywords):
+def automate_command_builder(path, keywords):
 	autoCommandString = os.path.basename(__file__)
 	autoCommandString += " -l " + path
 	if args.force:
@@ -339,12 +348,10 @@ def automateCommandBuilder(path, keywords):
 """
 Lists all files in a given directory.
 """
-def listDirectory(path = os.getcwd(), returnDir = False):
+def list_directory(path = os.getcwd(), returnDir = False):
 	directory = os.listdir(path)
 	for line in directory:
-		pass
 		vprint(line, 1)
-
 	if returnDir:
 		return directory
 
@@ -354,19 +361,19 @@ def listDirectory(path = os.getcwd(), returnDir = False):
 vprint(args, 0)
 filelines = []
 if args.keyword and args.logpath and args.savename:
-	filelines = readFile(args.logpath, args.keyword) #reading the file
-	saveFile(filelines, args.savename) #saving the file
+	filelines = read_file(args.logpath, args.keyword) #reading the file
+	save_file(filelines, args.savename) #saving the file
 	sys.exit()
 if args.logpath and args.keyword:
-	filelines = readFile(args.logpath, args.keyword)
+	filelines = read_file(args.logpath, args.keyword)
 elif args.logpath:
-	filelines = readFile(args.logpath, getKeywords())
+	filelines = read_file(args.logpath, get_keywords())
 else:
-	listDirectory()
+	list_directory()
 	file_path=input("Type a file from above, or type a filepath...\n> ")
-	keywords = getKeywords()
-	automateCommandBuilder(file_path, keywords)
-	filelines = readFile(file_path, keywords)
+	keywords = get_keywords()
+	automate_command_builder(file_path, keywords)
+	filelines = read_file(file_path, keywords)
 
 print(len(filelines), "instances found")
 while True:
@@ -380,12 +387,12 @@ while True:
 		sys.exit()
 	elif choice.lower() == "s":
 		choice = input("Name your file...")
-		saveFile(filelines, choice)
+		save_file(filelines, choice)
 	elif choice.lower() == "v":
-		viewLines(filelines)
+		view_lines(filelines)
 	elif choice.lower() == "c":
 		file_path=input("Type a filepath...\n> ")
-		filelines = readFile(file_path, keywords)
+		filelines = read_file(file_path, keywords)
 		print(len(filelines), "instances found")
 	else:
 		print("choose something else")

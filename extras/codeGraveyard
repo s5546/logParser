@@ -172,6 +172,7 @@ Checks how the file is compressed, and then attempts to read all files
  within.
  
 Was meant to read zip and tar files without extracting- I was trying to save on disk IOPS. Almost worked, too- Just needed some better parsing of the zip/tar files. Maybe some other day.
+It might not be a good idea anyway. Modern compression's REALLY good, a tiny .zip or .tar file can balloon quickly to several times its size. And just imagine a zip bomb... You could mitigate it (i.e. not read after a certian size) if you're writing to disk, but ram's just not big enough.
 '''
 def readCompressedFile(compressedFilePath, keywords, compressionType):
 	filelines = []

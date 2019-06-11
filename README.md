@@ -7,31 +7,33 @@ Uses psutil, you'll have to install it using pip3 (or just use the -f flag, it g
 
 Attempts to follow PEP8, except for the parts that I don't like and also the parts I forget about
 
+----
+
 switches:
 
--f removes some safety precautions and "forces" it to read the file
+- f removes some safety precautions and "forces" it to read the file
 
 	Also removes the need for psutil
 
--w forces windows style commands even if your OS isnt windows
+- w forces windows style commands even if your OS isnt windows
 
--u forces unix style commands even if your OS isnt unix
+- u forces unix style commands even if your OS isnt unix
 
--x enables the spinning load thing, making the program at least twice as fun
+- x enables the spinning load thing, making the program at least twice as fun
 
 	it ALSO slows down execution by 2-6x, giving you even more time for the fun
 
--k keywords to search through the file for
+- k keywords to search through the file for
 
--l path to log you want to parse
+- l path to log you want to parse
 
--s saves the logs to whatever file you specify
+- s saves the logs to whatever file you specify
 
--q reduces verbosity, varying depending on how many q's you use
+- q reduces verbosity, varying depending on how many q's you use
 
 	3 q's or more will disable console output, once I get that implemented
 
--v intensifies verbosity, varying depending on how many v's you use.
+- v intensifies verbosity, varying depending on how many v's you use.
 	
 	2 v's or more shows debug info
 
@@ -44,6 +46,24 @@ Known bugs:
 	
 - Some directories are added, regardless of if they have any matches
 
+----
+Example files included:
+
+- tarzipdir.tar.gz.zip.xz
+
+	has four small logs. From the top down, its a zip containing both [a gzip file, which we currently dont support] and a tar.gz containing both [a txt file] and (a directory containing a zip and a tar.gz, each of which contain a txt file).
+	
+	Tests recursive compressed files, the tmp directory, corrupted file filtering, and the limits of human comprehension
+	
+- bomb.zip
+
+	Generated from https://github.com/damianrusinek/zip-bomb
+	
+	a zip bomb! Generated using "python zip-bomb.py nested 8192000 out.zip"
+	
+	supposedly uncompresses to 800gb
+
+For good logs to test with, try https://www.secrepo.com/
 ----
 
 todo:
@@ -63,6 +83,10 @@ innovate
 		GUI?
 		
 			Probably hell in python
+			
+Protect from zip bombs
+
+	A fourm post I found suggested checking the size of the tmp folder, and comparing that to the original file- if the ratio of uncompressed:compressed is too high, stop reading.
 		
 options menu
 
@@ -74,7 +98,7 @@ options menu
 	
 	How many lines to read at one time?
   
-  options to remove redundant lines of passwords
+	options to remove redundant lines of passwords
 	
 	make directory searching non-recursive
 	
@@ -87,6 +111,8 @@ clean up
 	figure out how to format python code
 	
 	why all these random variables happening everywhere
+	
+	dem import statements
 	
 	
 QoL
@@ -106,3 +132,5 @@ QoL
 		threading, basically
 		
 	add file filtering to readFile()
+	
+Email altmcman@gmail.com if you have suggestions or problems
