@@ -11,31 +11,33 @@ Attempts to follow PEP8, except for the parts that I don't like and also the par
 
 switches:
 
-- f removes some safety precautions and "forces" it to read the file
+- f: removes some safety precautions and "forces" it to read the file
 
 	Also removes the need for psutil
 
-- w forces windows style commands even if your OS isnt windows
+- w: forces windows style commands even if your OS isnt windows
 
-- u forces unix style commands even if your OS isnt unix
+- u: forces unix style commands even if your OS isnt unix
 
-- x enables the spinning load thing, making the program at least twice as fun
+- x: enables the spinning load thing, making the program at least twice as fun
 
 	it ALSO slows down execution by 2-6x, giving you even more time for the fun
 
-- k keywords to search through the file for
+- k: keywords to search through the file for
 
-- l path to log you want to parse
+- l: path to log you want to parse
 
-- s saves the logs to whatever file you specify
+- s: saves the logs to whatever file you specify
 
-- q reduces verbosity, varying depending on how many q's you use
+- q: reduces verbosity, varying depending on how many q's you use
 
 	3 q's or more will disable console output, once I get that implemented
 
-- v intensifies verbosity, varying depending on how many v's you use.
+- v: intensifies verbosity, varying depending on how many v's you use.
 	
 	2 v's or more shows debug info
+	
+- i: ignores certian keywords
 
 ----
 Known bugs:
@@ -71,7 +73,11 @@ todo:
 
 innovate
 
-	What I have is essentially a very slow version of grep that's a little more user-friendly. I need to add something more...
+	Grep's a native linux command and about 2-4x faster than this, so what can this offer?
+	
+		I probably can't match it for speed (at least with a single thread), since I'm on python (or is that just an excuse? idk)
+		
+		On large search operations with many files, we beat grep (~31.6sec vs our ~23.0sec) using 10 writelocked syslog files totaling 1.8gb
 	
 	ideas (not necessarily practical ones):
 		
@@ -85,10 +91,14 @@ innovate
 		
 			Probably hell in python
 			
+		
+			
 Protect from zip bombs
 
 	A fourm post I found suggested checking the size of the tmp folder, and comparing that to the original file- if the ratio of uncompressed:compressed is too high, stop reading.
 		
+ignore files option
+
 options menu
 
 	(make these settings persistent somehow)

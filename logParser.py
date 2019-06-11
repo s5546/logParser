@@ -104,7 +104,14 @@ parser.add_argument(
 	"--keyword", 
 	help="keywords to search for. Put this at the end of your command,"
 	+ " and then enter as many keywords as you want.", 
-	nargs=argparse.REMAINDER
+	nargs="*"
+)
+parser.add_argument(
+	"-i", 
+	"--ignore", 
+	help="keywords to ignore. Put this at the end of your command,"
+	+ " and then enter as many keywords as you want.", 
+	nargs="*"
 )
 args = parser.parse_args()
 
@@ -218,7 +225,7 @@ def read_file(filepath, keywords, recursions = 0):
 	filelines = []
 	currentLine = 0
 	try: #monolithic try statement incoming
-		vprint("Opening file: "+filepath, -1)
+		
 		if os.path.isdir(filepath):
 			dirList = list_directory(filepath, returnDir=True)
 			for files in dirList: #fully recursive, be careful
@@ -256,25 +263,31 @@ def read_file(filepath, keywords, recursions = 0):
 								+ "a bad idea. Continue? (y/n)\n> ")
 				if (choice.lower() == "n"):
 					return filelines
+		vprint("Opening file: "+filepath, -1)
 		start_time = executionTimer()
 		with open(filepath, "r") as f:
 			#read the line, and check for keywords
 			while True:
 				currentLine += 1
-				lineString = f.readline()
-				if not lineString:
-					break
-				keyFound = False
-				for key in keywords:
-					if key in lineString:
-						keyFound = True
+				try:
+					lineString = f.readline()
+					if not lineString:
+						break
+					keyFound = False
+					for key in keywords:
+						if key in lineString:
+							if args.ignore:
+								for ig in args.ignore:
+									if ig not in lineString:
+										keyFound = True
+							else:
+								keyFound = True
+				except UnicodeDecodeError:
+					pass
 				if keyFound:
 					filelines.append(str(currentLine) + "] " + lineString)
 				spinningLoad()
 		executionTimer(start_time)
-	except UnicodeDecodeError:
-		vprint("Can't decode file; file is corrupt or binary", 2)
-		return ["File is corrupt or a binary file, skipping"]
 	except PermissionError:
 		vprint("Can't open file- permission denied", 3)
 		return ["Permission denied for this file"]
@@ -343,6 +356,10 @@ def automate_command_builder(path, keywords):
 	autoCommandString += " -k"
 	for line in keywords:
 		autoCommandString += " " + line
+	if args.ignore:
+		autoCommandString += " -i"
+		for line in args.ignore:
+			autoCommandString += " " + line
 	vprint("Protip: automate this command using \"" + autoCommandString + "\"", 1)
 
 """
@@ -376,6 +393,14 @@ else:
 	filelines = read_file(file_path, keywords)
 
 print(len(filelines), "instances found")
+
+"""
+temp pls remove this its just to test speed
+"""
+sys.exit()
+"""
+temp pls remove this its just to test speed
+"""
 while True:
 	choice = input("What do you want to do with these lines?"
 				+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search..."
@@ -383,7 +408,10 @@ while True:
 	if choice.lower() == "e":
 		vprint("exiting...", 3)
 		#probably fine but should have verification? dont wanna delete user files
-		shutil.rmtree(tempfile.gettempdir() + "/logParserTemp/")
+		#but at a certian point, it's kinda their fault...
+		#but if this ever somehow gets a wildly wrong directly, that's gonna suck
+		if os.path.isdir(tempfile.gettempdir() + "/logParserTemp/"):
+			shutil.rmtree(tempfile.gettempdir() + "/logParserTemp/")
 		sys.exit()
 	elif choice.lower() == "s":
 		choice = input("Name your file...")
