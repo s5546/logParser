@@ -77,7 +77,7 @@ innovate
 	
 		I probably can't match it for speed (at least with a single thread), since I'm on python (or is that just an excuse? idk)
 		
-		On large search operations with many files, we beat grep (~31.6sec vs our ~23.0sec) using 10 writelocked syslog files totaling 1.8gb
+		we occasionally beat grep on multiple file searches
 	
 	ideas (not necessarily practical ones):
 		
