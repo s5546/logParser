@@ -5,6 +5,16 @@ Developed on python 3.6.7, using Geany
 
 Uses psutil, you'll have to install it using pip3 (or just use the -f flag, it gets rid of some safety measures but you wont need psutil then)
 
+Uses tkinter for the GUI. Check if you have it installed by running "python -m tkinter"- a window should pop up.
+
+	If you're on Python 3.7.2 or above, it should already be installed. It wasn't for me, but it SHOULD be.
+
+	If you're on linux, search for "python3-tk" in your distro's repos (eg. "sudo apt install python3-tk")
+	
+	If you're on windows, follow this guide: https://tkdocs.com/tutorial/install.html#installwin
+	
+	If you're on macOS, follow this guide: https://tkdocs.com/tutorial/install.html#installmac
+
 Attempts to follow PEP8, except for the parts that I don't like and also the parts I forget about
 
 ----
@@ -37,7 +47,9 @@ switches:
 	
 	2 v's or more shows debug info
 	
-- i: ignores certian keywords
+- ik: ignores all keywords that match this list
+
+- if: ignores all files matching this list
 
 ----
 Known bugs:
@@ -47,6 +59,10 @@ Known bugs:
 	Accepts absolute paths when there's an equals between the -l and the path
 	
 - Some directories are added, regardless of if they have any matches
+
+- Depending on how they're made, Zip Bombs can occasionally put the program in an infinite loop of extracting the same few zips
+
+	This is related to how I do the file searching- I always read the alphabetically first file (regardless of how recently it's been extracted, but if i instead appended it to the end it might be easier (or extracted all zips before file reading, idk)
 
 ----
 Example files included:
@@ -71,6 +87,18 @@ https://www.secrepo.com/ has some pretty good logs if ya need em
 
 todo:
 
+Gui-
+
+	textfield describing each input on mousehover
+	
+	basic option textboxes
+	
+	radio buttons for switches
+	
+	output for the log- probably a second window?
+	
+	turn console on and off
+
 innovate
 
 	Grep's a native linux command and about 2-4x faster than this, so what can this offer?
@@ -86,18 +114,10 @@ innovate
 		Really drive home that userfriendliness
 		
 			Multithreading? Grep is not multithreaded, and while there are ways to use it with multiple threads- they're complicated, and an average end-user won't know how to use them (if they even realize multithreading is a thing)
-			
-		GUI?
 		
-			Probably hell in python
-			
-		
-			
 Protect from zip bombs
 
 	A fourm post I found suggested checking the size of the tmp folder, and comparing that to the original file- if the ratio of uncompressed:compressed is too high, stop reading.
-		
-ignore files option
 
 options menu
 
@@ -114,6 +134,8 @@ options menu
 	make directory searching non-recursive
 	
 	make multi-file logs cohesive, instead of split
+	
+	stop after XXXXMB parsed
 	
 clean up
 

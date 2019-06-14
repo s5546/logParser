@@ -19,121 +19,6 @@
 #  MA 02110-1301, USA.
 # 
 # 
-
-
-import sys
-import os
-import argparse
-import platform
-import time
-import zipfile
-import tarfile
-import shutil
-import tempfile
-
-parser = argparse.ArgumentParser(
-	description="Takes UTF-8 decodable logs (aka nearly all logs) and reads"
-		+ " them, scanning for keywords.",
-	prefix_chars="-/"
-)
-parser.add_argument(
-	"-l",
-	"--logpath",
-	help="the path to the logfile. If your log is in a different directory,"
-		+ " use an equals between the -s/--savename and your path"
-		+ " (aka an absolute path)."
-		+ " Supports files, directories, zip files, and tar files."
-		+ " Recursively searches, so use with caution.",
-	type=str,
-	metavar="<log path>"
-)
-parser.add_argument(
-	"-s",
-	"--savename",
-	help="What to save the parsed log as. If you want it in a different"
-		+ " directory, use an equals between the -s/--savename and your path"
-		+ " (aka an absolute path).",
-	metavar="<save name>"
-)
-parser.add_argument(
-	"-r",
-	"--risky",
-	help="does riskier operations for potentially more speed. "
-		+ " This actually doesn't do much at the moment...",
-	action="store_true"
-)
-parser.add_argument(
-	"-f",
-	"--force",
-	help="removes safety checks, and (if permissions are high enough)"
-		+ " always does certain tasks.",
-	action="store_true"
-)
-parser.add_argument(
-	"-x",
-	"--fun",
-	help="starts the fun by adding the spinner! "
-				+ "its so fun, your cpu will forget to do work-"
-				+ " execution is 2-6x slower with this on, beware",
-	action="store_true"
-)
-
-os_group = parser.add_mutually_exclusive_group()
-os_group.add_argument(
-	"-u",
-	"--unix",
-	help="forces unix OS detection",
-	action="store_true"
-)
-os_group.add_argument(
-	"-w",
-	"--windows",
-	help="forces windows OS detection",
-	action="store_true"
-)
-verboisty_group = parser.add_mutually_exclusive_group()
-verboisty_group.add_argument(
-	"-v",
-	"--verbose",
-	help="intensifies console output. Use more v's for more output."
-	+ " 3+ v's will print *e v e r y t h i n g* .",
-	action="count"
-)
-verboisty_group.add_argument(
-	"-q",
-	"--quiet",
-	help="reduces console output. Use more q's for less output."
-	+ " Once I actually implement it, 3+ q's will disable stdout.",
-	action="count"
-)
-parser.add_argument(
-	"-k",
-	"--keyword",
-	help="keywords to search for. Put this at the end of your command,"
-	+ " and then enter as many keywords as you want.",
-	nargs="*"
-)
-parser.add_argument(
-	"-ik",
-	"--ignore_keyword",
-	help="keywords to ignore. Put this at the end of your command,"
-	+ " and then enter as many keywords as you want.",
-	nargs="*"
-)
-parser.add_argument(
-	"-if",
-	"--ignore_file",
-	help="logfiles to ignore. Put this at the end of your command,"
-	+ " and then enter as many logfiles as you want.",
-	nargs="*"
-)
-args = parser.parse_args()
-
-if not args.force:
-	# only used for safety checking
-	import psutil
-	process = psutil.Process(os.getpid())
-
 """
 saves to a temporary file in the same directory, and once its verified
  the tmpfile is renamed to a user defined value
@@ -394,54 +279,190 @@ def automate_command_builder(path, keywords):
 """
 Lists all files in a given directory.
 """
-def list_directory(path=os.getcwd(), returnDir=False):
+def list_directory(path=None, returnDir=False):
+	if path is None:
+		os.getcwd()
 	directory = os.listdir(path)
 	for line in directory:
 		vprint(line, 1)
 	if returnDir:
 		return directory
+		
+def parse_arguments():
+	parser = argparse.ArgumentParser(
+		description="Takes UTF-8 decodable logs (aka nearly all logs) and reads"
+			+ " them, scanning for keywords.",
+		prefix_chars="-/"
+	)
+	parser.add_argument(
+		"-l",
+		"--logpath",
+		help="the path to the logfile. If your log is in a different directory,"
+			+ " use an equals between the -s/--savename and your path"
+			+ " (aka an absolute path)."
+			+ " Supports files, directories, zip files, and tar files."
+			+ " Recursively searches, so use with caution.",
+		type=str,
+		metavar="<log path>"
+	)
+	parser.add_argument(
+		"-s",
+		"--savename",
+		help="What to save the parsed log as. If you want it in a different"
+			+ " directory, use an equals between the -s/--savename and your path"
+			+ " (aka an absolute path).",
+		metavar="<save name>"
+	)
+	parser.add_argument(
+		"-r",
+		"--risky",
+		help="does riskier operations for potentially more speed. "
+			+ " This actually doesn't do much at the moment...",
+		action="store_true"
+	)
+	parser.add_argument(
+		"-f",
+		"--force",
+		help="removes safety checks, and (if permissions are high enough)"
+			+ " always does certain tasks.",
+		action="store_true"
+	)
+	parser.add_argument(
+		"-x",
+		"--fun",
+		help="starts the fun by adding the spinner! "
+					+ "its so fun, your cpu will forget to do work-"
+					+ " execution is 2-6x slower with this on, beware",
+		action="store_true"
+	)
 
+	os_group = parser.add_mutually_exclusive_group()
+	os_group.add_argument(
+		"-u",
+		"--unix",
+		help="forces unix OS detection",
+		action="store_true"
+	)
+	os_group.add_argument(
+		"-w",
+		"--windows",
+		help="forces windows OS detection",
+		action="store_true"
+	)
+	verboisty_group = parser.add_mutually_exclusive_group()
+	verboisty_group.add_argument(
+		"-v",
+		"--verbose",
+		help="intensifies console output. Use more v's for more output."
+		+ " 3+ v's will print *e v e r y t h i n g* .",
+		action="count"
+	)
+	verboisty_group.add_argument(
+		"-q",
+		"--quiet",
+		help="reduces console output. Use more q's for less output."
+		+ " Once I actually implement it, 3+ q's will disable stdout.",
+		action="count"
+	)
+	parser.add_argument(
+		"-k",
+		"--keyword",
+		help="keywords to search for. Put this at the end of your command,"
+		+ " and then enter as many keywords as you want.",
+		nargs="*"
+	)
+	parser.add_argument(
+		"-ik",
+		"--ignore_keyword",
+		help="keywords to ignore. Put this at the end of your command,"
+		+ " and then enter as many keywords as you want.",
+		nargs="*"
+	)
+	parser.add_argument(
+		"-if",
+		"--ignore_file",
+		help="logfiles to ignore. Put this at the end of your command,"
+		+ " and then enter as many logfiles as you want.",
+		nargs="*"
+	)
+	return parser.parse_args()
+
+def easyReadLines(logpath, keyword, savename=None, return_value=False):
+	filelines = read_file(logpath, keyword) # reading the file
+	if savename:
+		save_file(filelines, savename) # saving the file
+	if return_value:
+		return filelines
+
+"""
+required imports
+"""
+import argparse
+import sys
+import os
+import zipfile
+import tarfile
+import shutil
+import tempfile
+import time
 """
 <<Main Method>>
 """
-vprint(args, 0)
-filelines = []
-if args.keyword and args.logpath and args.savename:
-	filelines = read_file(args.logpath, args.keyword) # reading the file
-	save_file(filelines, args.savename) # saving the file
-	sys.exit()
-if args.logpath and args.keyword:
-	filelines = read_file(args.logpath, args.keyword)
-elif args.logpath:
-	filelines = read_file(args.logpath, get_keywords())
-else:
-	list_directory()
-	file_path = input("Type a file from above, or type a filepath...\n> ")
-	keywords = get_keywords()
-	automate_command_builder(file_path, keywords)
-	filelines = read_file(file_path, keywords)
-
-print(len(filelines), "instances found")
-while True:
-	choice = input("What do you want to do with these lines?"
-				+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search..."
-				+ "\n(E)xit\n> ")
-	if choice.lower() == "e":
-		vprint("exiting...", 3)
-		# probably fine but should have verification? dont wanna delete user files-
-		# but at a certian point, it's kinda their fault for storing files in /tmp...
-		# but if this ever somehow gets a wildly wrong directly, that's gonna suck
-		if os.path.isdir(tempfile.gettempdir() + "/logParserTemp/"):
-			shutil.rmtree(tempfile.gettempdir() + "/logParserTemp/")
+if __name__ == "__main__":
+	import platform
+	
+	args = parse_arguments()
+	if not args.force:
+		# only used for safety checking
+		import psutil
+		process = psutil.Process(os.getpid())
+	
+	vprint(args, 0)
+	filelines = []
+	if args.keyword and args.logpath and args.savename:
+		filelines = read_file(args.logpath, args.keyword) # reading the file
+		save_file(filelines, args.savename) # saving the file
 		sys.exit()
-	elif choice.lower() == "s":
-		choice = input("Name your file...")
-		save_file(filelines, choice)
-	elif choice.lower() == "v":
-		view_lines(filelines)
-	elif choice.lower() == "c":
-		file_path = input("Type a filepath...\n> ")
-		filelines = read_file(file_path, keywords)
-		print(len(filelines), "instances found")
+	if args.logpath and args.keyword:
+		filelines = read_file(args.logpath, args.keyword)
+	elif args.logpath:
+		filelines = read_file(args.logpath, get_keywords())
 	else:
-		print("choose something else")
+		list_directory()
+		file_path = input("Type a file from above, or type a filepath...\n> ")
+		keywords = get_keywords()
+		automate_command_builder(file_path, keywords)
+		filelines = read_file(file_path, keywords)
+
+	print(len(filelines), "instances found")
+	while True:
+		choice = input("What do you want to do with these lines?"
+					+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search..."
+					+ "\n(E)xit\n> ")
+		if choice.lower() == "e":
+			vprint("exiting...", 3)
+			# probably fine but should have verification? dont wanna delete user files-
+			# but at a certian point, it's kinda their fault for storing files in /tmp...
+			# but if this ever somehow gets a wildly wrong directly, that's gonna suck
+			if os.path.isdir(tempfile.gettempdir() + "/logParserTemp/"):
+				shutil.rmtree(tempfile.gettempdir() + "/logParserTemp/")
+			sys.exit()
+		elif choice.lower() == "s":
+			choice = input("Name your file...")
+			save_file(filelines, choice)
+		elif choice.lower() == "v":
+			view_lines(filelines)
+		elif choice.lower() == "c":
+			file_path = input("Type a filepath...\n> ")
+			filelines = read_file(file_path, keywords)
+			print(len(filelines), "instances found")
+		else:
+			print("choose something else")
+else:
+	import argparse
+	args = parse_arguments()
+	print(args)
+	if not args.force:
+		# only used for safety checking
+		import psutil
+		process = psutil.Process(os.getpid())
