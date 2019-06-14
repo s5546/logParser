@@ -14,10 +14,10 @@ class ControlApp:
 			)
 		self.button.pack(side=LEFT)
 		
-		self.parse_button = Button(frame, text="parse", command= lambda: self.parse(self.optDict))
+		self.parse_button = Button(frame, text="parse", command= lambda: self.parse(self.opt_dict))
 		self.parse_button.pack(side=LEFT)
 		
-		self.optDict = {
+		self.opt_dict = {
 			"log_path" : StringVar(),
 			"save_path" : StringVar(),
 			"keyword_list" : StringVar(),
@@ -30,16 +30,17 @@ class ControlApp:
 		}
 		# adding all fields
 		# there's gotta be a smarter way to do this, right?
-		self.log_path = Entry(master, text="enter a log path here...", textvariable=self.optDict["log_path"])
-		self.save_path = Entry(master, text="enter a save path here..", textvariable=self.optDict["save_path"])
-		self.keywords = Entry(master, text="enter your keywords here...", textvariable=self.optDict["keyword_list"])
-		self.ignored_keywords = Entry(master, text="enter your ignored keywords here...", textvariable=self.optDict["ignored_keyword_list"])
-		self.ignored_files = Entry(master, text="enter your ignored files here...", textvariable=self.optDict["ignored_file_list"])
-		self.force_unix_detection = Radiobutton(master, text="Unix", variable=self.optDict["force_os_detection"], value="u", indicatoron=0)
-		self.force_windows_detection = Radiobutton(master, text="Windows", variable=self.optDict["force_os_detection"], value="w", indicatoron=0)
-		self.fun_box = Checkbutton(master, text="Fun", variable=self.optDict["fun_box"])
-		self.force_box = Checkbutton(master, text="Force", variable=self.optDict["force_box"])
-		self.verbosity_slider = Scale(master, from_=3, to=-3, variable=self.optDict["verbosity_value"], label="Verbosity")
+		# cause this feels REALLY gross
+		self.log_path = Entry(master, text="enter a log path here...", textvariable=self.opt_dict["log_path"])
+		self.save_path = Entry(master, text="enter a save path here..", textvariable=self.opt_dict["save_path"])
+		self.keywords = Entry(master, text="enter your keywords here...", textvariable=self.opt_dict["keyword_list"])
+		self.ignored_keywords = Entry(master, text="enter your ignored keywords here...", textvariable=self.opt_dict["ignored_keyword_list"])
+		self.ignored_files = Entry(master, text="enter your ignored files here...", textvariable=self.opt_dict["ignored_file_list"])
+		self.force_unix_detection = Radiobutton(master, text="Unix", variable=self.opt_dict["force_os_detection"], value="u", indicatoron=0)
+		self.force_windows_detection = Radiobutton(master, text="Windows", variable=self.opt_dict["force_os_detection"], value="w", indicatoron=0)
+		self.fun_box = Checkbutton(master, text="Fun", variable=self.opt_dict["fun_box"])
+		self.force_box = Checkbutton(master, text="Force", variable=self.opt_dict["force_box"])
+		self.verbosity_slider = Scale(master, from_=3, to=-3, variable=self.opt_dict["verbosity_value"], label="Verbosity")
 		self.log_path.pack(side=LEFT)
 		self.save_path.pack(side=LEFT)
 		self.keywords.pack(side=LEFT)
@@ -52,7 +53,7 @@ class ControlApp:
 		self.force_box.pack(side=LEFT)
 				
 	def parse(self, vars_dict):
-		for line in parser.easyReadLines(vars_dict["log_path"].get(), vars_dict["keyword_list"].get(), return_value=True):
+		for line in parser.easyReadLines(vars_dict):
 			print(line)
 		
 	

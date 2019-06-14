@@ -387,13 +387,36 @@ def parse_arguments():
 	)
 	return parser.parse_args()
 
-def easyReadLines(logpath, keyword, savename=None, return_value=False):
-	filelines = read_file(logpath, keyword) # reading the file
-	if savename:
-		save_file(filelines, savename) # saving the file
-	if return_value:
+def easyReadLines(**options):
+	args.
+	
+	verbosity = options["verbosity_value"].read()
+	if verbosity not 0:
+		if verbosity < 0:
+			args.quiet = verbosity
+		else:
+			args.verbose = verbosity
+	args.ignore_keyword = options["ignored_keyword_list"]  # todo: adapt from string to list
+	args.ignore_file = options["ignored_file_list"]  # todo: adapt from string to list
+	filelines = read_file(options["log_path"].read(), options["keyword_list"].read()) # reading the file  # todo: adapt keywords from string to list
+	forced_OS = options["force_os_detection"].read()
+	if forced_OS is not "":
+		if forced_OS is "u":
+			args.unix = True
+		else:
+			args.windows = True
+			
+	if options["save_path"].read() is not "":
+		safe_file(filelines, options["save_path"].read()) 
+	if options["return_value"]:
 		return filelines
-
+	
+		"""
+			"force_os_detection" : StringVar(),
+			"verbosity_value" : IntVar(),
+			"fun_box" : BooleanVar(),
+			"force_box" : BooleanVar()
+		"""
 """
 required imports
 """
