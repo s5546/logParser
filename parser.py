@@ -130,9 +130,10 @@ def read_file(filepath, keywords, recursions=0):
 	filelines = []
 	currentLine = 0
 	try: # monolithic try statement incoming
+		print("printing: \"", filepath, "\"")
 		if args.ignore_file:
 			if filepath in args.ignore_file:
-				sys.exit()
+				return
 		if os.path.isdir(filepath):
 			dirList = list_directory(filepath, returnDir=True)
 			for files in dirList:  # fully recursive, be careful
@@ -143,7 +144,9 @@ def read_file(filepath, keywords, recursions=0):
 		elif zipfile.is_zipfile(filepath):
 			with zipfile.ZipFile(filepath, "r") as zipped:
 				# temp directory / this program's temp / the zip file / *files inside
-				temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
+				#temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
+				# wait why do i even split it wouldnt removing the split fix the zipbomb problem
+				temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/tmp/logParserTemp")[len(filepath.split("/"))-1]
 				zipped.extractall(path = temp_path)
 				vprint("extracting " + temp_path, 0)
 				return read_file(temp_path, keywords, recursions+1)
@@ -386,40 +389,14 @@ def parse_arguments():
 		nargs="*"
 	)
 	return parser.parse_args()
-
-def easyReadLines(**options):
-	args.
 	
-	verbosity = options["verbosity_value"].read()
-	if verbosity not 0:
-		if verbosity < 0:
-			args.quiet = verbosity
-		else:
-			args.verbose = verbosity
-	args.ignore_keyword = options["ignored_keyword_list"]  # todo: adapt from string to list
-	args.ignore_file = options["ignored_file_list"]  # todo: adapt from string to list
-	filelines = read_file(options["log_path"].read(), options["keyword_list"].read()) # reading the file  # todo: adapt keywords from string to list
-	forced_OS = options["force_os_detection"].read()
-	if forced_OS is not "":
-		if forced_OS is "u":
-			args.unix = True
-		else:
-			args.windows = True
-			
-	if options["save_path"].read() is not "":
-		safe_file(filelines, options["save_path"].read()) 
-	if options["return_value"]:
-		return filelines
+"""
+i'm sorry for this
+"""
+def	global_args(arg_space):
+	global args 
+	args = arg_space
 	
-		"""
-			"force_os_detection" : StringVar(),
-			"verbosity_value" : IntVar(),
-			"fun_box" : BooleanVar(),
-			"force_box" : BooleanVar()
-		"""
-"""
-required imports
-"""
 import argparse
 import sys
 import os
@@ -428,17 +405,13 @@ import tarfile
 import shutil
 import tempfile
 import time
+import platform
+import psutil
 """
 <<Main Method>>
 """
 if __name__ == "__main__":
-	import platform
-	
 	args = parse_arguments()
-	if not args.force:
-		# only used for safety checking
-		import psutil
-		process = psutil.Process(os.getpid())
 	
 	vprint(args, 0)
 	filelines = []
@@ -481,11 +454,53 @@ if __name__ == "__main__":
 			print(len(filelines), "instances found")
 		else:
 			print("choose something else")
-else:
-	import argparse
-	args = parse_arguments()
-	print(args)
-	if not args.force:
-		# only used for safety checking
-		import psutil
-		process = psutil.Process(os.getpid())
+		
+		
+	
+class Parser:
+	filelines = []
+	opts = {}
+	args = {}
+	
+	def __init__(self, **options):
+		self.opts = options
+		self.args = self.update_arguments(self.opts)
+		global_args(self.args)
+		
+	def easyReadLines(self):
+		self.update_arguments(self.opts)
+		self.read_filelines()
+		if self.opts["save_path"].get() is not "":
+			save_file(self.filelines, self.opts["save_path"].get())
+		
+	def update_arguments(self, options, skip_parse_args=False):
+		if not skip_parse_args:
+			self.args = parse_arguments()
+		verbosity = self.opts["verbosity_value"].get()
+		if verbosity is not 0:
+			if verbosity < 0:
+				self.args.quiet = verbosity
+			else:
+				self.args.verbose = verbosity
+		self.args.logpath = self.opts["log_path"].get()
+		self.args.ignore_keyword = self.opts["ignored_keyword_list"].get()  # todo: adapt from string to list
+		self.args.ignore_file = self.opts["ignored_file_list"].get()  # todo: adapt from string to list
+		forced_OS = self.opts["force_os_detection"].get()
+		if forced_OS is not "":
+			if forced_OS is "u":
+				self.args.unix = True
+			else:
+				self.args.windows = True
+		self.args.force = self.opts["force_box"].get()
+		self.args.fun = self.opts["fun_box"].get()
+		global_args(self.args)
+		self.args.savename = self.opts["save_path"].get()
+		
+			
+	def read_filelines(self, also_get_lines=False):
+		self.filelines = read_file(self.opts["log_path"].get(), self.opts["keyword_list"].get()) # reading the file  # todo: adapt keywords from string to list
+		if also_get_lines:
+			return get_filelines()
+	
+	def get_filelines(self):
+		return self.filelines

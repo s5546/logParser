@@ -14,6 +14,8 @@ Uses tkinter for the GUI. Check if you have it installed by running "python -m t
 	If you're on windows, follow this guide: https://tkdocs.com/tutorial/install.html#installwin
 	
 	If you're on macOS, follow this guide: https://tkdocs.com/tutorial/install.html#installmac
+	
+		(note: i have no way to test if that works, sorry)
 
 Attempts to follow PEP8, except for the parts that I don't like and also the parts I forget about
 
@@ -165,5 +167,7 @@ QoL
 		threading, basically
 		
 	add file filtering to readFile()
+	
+	The read speed seems wildly inconsistent- see logParservsGrep06-05-19.png
 	
 Email altmcman@gmail.com if you have suggestions or problems
