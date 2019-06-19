@@ -2,3 +2,5 @@
 /examples/conn.log
 logParser.bak
 *~
+/fuzzing/out/*
+/fuzzing/tmp/*

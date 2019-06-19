@@ -66,6 +66,9 @@ Known bugs:
 
 	This is related to how I do the file searching- I always read the alphabetically first file (regardless of how recently it's been extracted, but if i instead appended it to the end it might be easier (or extracted all zips before file reading, idk)
 
+- CLI: typing a null byte anywhere causes program to crash
+
+	tbh this feels like it's above me?
 ----
 Example files included:
 
