@@ -7,7 +7,7 @@ rm -rf tmp
 mkdir tmp
 cd tmp
 gnome-terminal -x py-afl-fuzz -i ../in -o ../out -m 250 -M fuzzer1 python3 ../scripts/fuzzparser.py
-cores=$(grep -c ^processor /proc/cpuinfo)
+cores=$(($(grep -c ^processor /proc/cpuinfo)-1))
 for (( c=1; c<=$cores; c++ ))
 do
 	echo -e "Waiting 10 seconds to launch next fuzzer...\n$c/$cores\n" #timeout COULD be lower but it fails if it's too low, and an extra 5 sec per core is nbd for how long AFL takes
