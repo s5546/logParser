@@ -69,6 +69,13 @@ Known bugs:
 - CLI: typing a null byte anywhere causes program to crash
 
 	tbh this feels like it's above me?
+	
+- The read speed seems wildly inconsistent- see logParservsGrep06-05-19.png
+
+	Shows average times over 1250 trials, LP has a std dev. of **~5** but grep has ~1 std devs
+	
+	Might just be bad testing? LP was first and i started testing that before the workday ended (i.e. while i was still doing things)
+	
 ----
 Example files included:
 
@@ -92,7 +99,7 @@ https://www.secrepo.com/ has some pretty good logs if ya need em
 
 todo:
 
-Gui-
+- Gui-
 
 	textfield describing each input on mousehover
 	
@@ -104,73 +111,75 @@ Gui-
 	
 	turn console on and off
 
-innovate
+- innovate
 
-	Grep's a native linux command and about 2-4x faster than this, so what can this offer?
+	- Grep's a native linux command and about 2-4x faster than this, so what can this offer?
 	
-		I probably can't match it for speed (at least with a single thread), since I'm on python (or is that just an excuse? idk)
+		- I probably can't match it for speed (at least with a single thread), since I'm on python (or is that just an excuse? idk)
 		
-		we occasionally beat grep on multiple file searches
+		- we occasionally beat grep on multiple file searches
 	
-	ideas (not necessarily practical ones):
+	- ideas (not necessarily practical ones):
 		
-		Sorter (a-z, z-a, more?)
+		- Sorter (a-z, z-a, more?)
 		
-		Really drive home that userfriendliness
+		- Really drive home that userfriendliness
 		
-			Multithreading? Grep is not multithreaded, and while there are ways to use it with multiple threads- they're complicated, and an average end-user won't know how to use them (if they even realize multithreading is a thing)
+			- Multithreading? Grep is not multithreaded, and while there are ways to use it with multiple threads- they're complicated, and an average end-user won't know how to use them (if they even realize multithreading is a thing)
 		
-Protect from zip bombs
+- Protect from zip bombs
 
-	A fourm post I found suggested checking the size of the tmp folder, and comparing that to the original file- if the ratio of uncompressed:compressed is too high, stop reading.
+	- A fourm post I found suggested checking the size of the tmp folder, and comparing that to the original file- if the ratio of uncompressed:compressed is too high, stop reading.
 
-options menu
+- options menu
 
-	(make these settings persistent somehow)
+	- (make these settings persistent somehow)
 
-	Where to save to?
+	- Where to save to?
 	
-	How to sort the lines?
+	- How to sort the lines?
 	
-	How many lines to read at one time?
+	- How many lines to read at one time?
   
-	options to remove redundant lines of passwords
+	- options to remove redundant lines of passwords
 	
-	make directory searching non-recursive
+	- make directory searching non-recursive
 	
-	make multi-file logs cohesive, instead of split
+	- make multi-file logs cohesive, instead of split
 	
-	stop after XXXXMB parsed
+	- stop after XXXXMB parsed
 	
-clean up
+- clean up
 
-	why my formatting succ so much pls fix, future me
+	- why my formatting succ so much pls fix, future me
 	
-	figure out how to format python code
+	- figure out how to format python code
 	
-	why all these random variables happening everywhere
+	- why all these random variables happening everywhere
 	
-	dem import statements
+	- dem import statements
+	
+	- nicer exceptions
+	
+		- eg. say "file name too long truncating to XXXX" instead of crashing with an exception
 	
 	
-QoL
+- QoL
 
-	line count suffixes
+	- line count suffixes
 	
-	better explanations on the -h screen
+	- better explanations on the -h screen
 
-	faster reading
+	- faster reading
 	
-		mmem is how I wanna do it, but honestly mmem scares me
+		- mmem is how I wanna do it, but honestly mmem scares me
 	
-	there's probably optimizations everywhere to be made
+	- there's probably optimizations everywhere to be made
 
-	improve the spin loader
+	- improve the spin loader
 		
-		threading, basically
+		- threading, basically
 		
-	add file filtering to readFile()
-	
-	The read speed seems wildly inconsistent- see logParservsGrep06-05-19.png
+	- add file filtering to readFile()
 	
 Email altmcman@gmail.com if you have suggestions or problems

@@ -4,3 +4,4 @@ logParser.bak
 *~
 /fuzzing/out/*
 /fuzzing/tmp/*
+/fuzzing/.*

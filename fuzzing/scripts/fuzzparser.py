@@ -19,6 +19,19 @@
 #  MA 02110-1301, USA.
 # 
 # 
+
+def safe_input(display_string=None):
+	while True:
+		try:
+			if display_string is None:
+				display_string = safe_input("Input a string...\n>")
+			return input(display_string)
+		except ValueError:
+			vprint("Unexpected value in your input, please try again", 2)
+			return safe_input()
+		except EOFError:
+			vprint("Unexpected end of your input", 2)
+			sys.exit(1)
 """
 saves to a temporary file in the same directory, and once its verified
  the tmpfile is renamed to a user defined value
@@ -115,7 +128,7 @@ def get_keywords():
 	keywordList = []
 	while True:
 		print("< ", end="")
-		keyword = input()
+		keyword = safe_input("")
 		if not keyword:
 			return keywordList
 		keywordList.append(keyword)		
@@ -182,7 +195,7 @@ def read_file(filepath, keywords, recursions=0):
 					return filelines
 				elif (statinfo.st_size > mem.available):
 					print("File size: {s} \t\t Free RAM + Swap: {f}".format(s=statinfo.st_size, f=(swapmem.free+mem.available)))
-					choice=input("This file is larger than your RAM, but may be small"
+					choice=safe_input("This file is larger than your RAM, but may be small"
 									+ " enough to fit in swap. This is probably "
 									+ "a bad idea. Continue? (y/n)\n> ")
 					if (choice.lower() == "n"):
@@ -251,7 +264,7 @@ def view_lines(filelines):
 			currentLine += os.get_terminal_size(0)[1]-2
 			for i in range(currentLine): 
 				print(filelines[i], end="")
-			choice = input("\nMore? (Y/n)\n> ")
+			choice = safe_input("\nMore? (Y/n)\n> ")
 			if choice.lower() == "n":
 				break
 		except OSError: #fuzzing purposes
@@ -443,14 +456,14 @@ if __name__ == "__main__":
 		filelines = read_file(args.logpath, get_keywords())
 	else:
 		list_directory()
-		file_path = input("Type a file from above, or type a filepath...\n> ")
+		file_path = safe_input("Type a file from above, or type a filepath...\n> ")
 		keywords = get_keywords()
 		automate_command_builder(file_path, keywords)
 		filelines = read_file(file_path, keywords)
 
 	print(len(filelines), "instances found")
 	while True:
-		choice = input("What do you want to do with these lines?"
+		choice = safe_input("What do you want to do with these lines?"
 					+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search..."
 					+ "\n(E)xit\n> ")
 		print("'", choice, "'")
@@ -464,7 +477,7 @@ if __name__ == "__main__":
 			os._exit(0)
 		elif choice.lower() == "s":
 			while True:
-				choice = input("Name your file...")
+				choice = safe_input("Name your file...")
 				if choice is not "":
 					save_file(filelines, choice)
 					break
@@ -473,7 +486,7 @@ if __name__ == "__main__":
 		elif choice.lower() == "v":
 			view_lines(filelines)
 		elif choice.lower() == "c":
-			file_path = input("Type a filepath...\n> ")
+			file_path = safe_input("Type a filepath...\n> ")
 			filelines = read_file(file_path, keywords)
 			print(len(filelines), "instances found")
 		else:

@@ -18,25 +18,51 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 # 
-# 
+#
+
+"""
+Python's input() method doesn't check that the user inputted bytes,
+and instead assumes the input's a string- rasing an exception if it's
+not a string. This method catches all exceptions that user input and
+fuzzing have shown me.
+"""
+def safe_input(display_string=None):
+	while True:
+		try:
+			return input(display_string)
+		except EOFError:
+			vprint("Unexpected end of your input", 2)
+			sys.exit(1)
+		except ValueError:
+			vprint("Unexpected value in your input, please try again", 2)
+			return "<Unknown Value>"
+		except UnicodeDecodeError:
+			vprint("Unexpected value in your input, please try again", 2)
+			return "<Unknown Byte>"
 """
 saves to a temporary file in the same directory, and once its verified
  the tmpfile is renamed to a user defined value
  (default is "parsedLog")
 """
 def save_file(listToBeWriten, name="parsedLog"):
-	f = open("tmpFile", "w")
-	vprint("saving file...", 2)
-	for line in listToBeWriten:
-		f.write(line)
-		spinningLoad()
-	f.flush()
-	os.fsync(f.fileno())
-	f.close()
-	# os.copy doesn't work across different filesystems
-	shutil.copy("tmpFile", name)
-	os.remove("tmpFile")
-	vprint("file saved!", 2)
+	try:
+		f = open("tmpFile", "w")
+		vprint("saving file...", 2)
+		for line in listToBeWriten:
+			f.write(line)
+			spinningLoad()
+		f.flush()
+		os.fsync(f.fileno())
+		f.close()
+		# os.copy doesn't work across different filesystems
+		if name != "tmpFile":
+			shutil.copy("tmpFile", name)
+			os.remove("tmpFile")
+		vprint("file saved!", 2)
+	except PermissionError:
+		vprint("Permission denied, cannot save in directory " + os.getcwd(), 2)
+	except NotADirectoryError:
+		vprint("Save location invalid", 2)
 
 """
 if quiet, only print when priority is higher than quiet level
@@ -111,7 +137,7 @@ def get_keywords():
 	keywordList = []
 	while True:
 		print("< ", end="")
-		keyword = input()
+		keyword = safe_input("")
 		if not keyword:
 			return keywordList
 		keywordList.append(keyword)		
@@ -129,33 +155,34 @@ Also checks if path is a compressed (tar or zip) file.
 def read_file(filepath, keywords, recursions=0):
 	filelines = []
 	currentLine = 0
-	try: # monolithic try statement incoming
-		print("printing: \"", filepath, "\"")
+	print("printing: \"", filepath, "\"")
+	try:
 		if args.ignore_file:
 			if filepath in args.ignore_file:
 				return
-		if os.path.isdir(filepath):
-			dirList = list_directory(filepath, returnDir=True)
-			for files in dirList:  # fully recursive, be careful
-				filelines.append("\n-----<<<" + (filepath + "/" + files) + ">>>-----\n")
-				filelines.append("{{" + str(recursions) + " recursion(s) deep" + "}}\n")
-				filelines.extend(read_file(filepath + "/" + files, keywords, recursions+1))
-			return filelines
-		elif zipfile.is_zipfile(filepath):
-			with zipfile.ZipFile(filepath, "r") as zipped:
-				# temp directory / this program's temp / the zip file / *files inside
-				#temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
-				# wait why do i even split it wouldnt removing the split fix the zipbomb problem
-				temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/tmp/logParserTemp")[len(filepath.split("/"))-1]
-				zipped.extractall(path = temp_path)
-				vprint("extracting " + temp_path, 0)
-				return read_file(temp_path, keywords, recursions+1)
-		elif tarfile.is_tarfile(filepath):
-			with tarfile.open(filepath, "r:*") as tarred:
-				temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
-				tarred.extractall(path = temp_path)
-				vprint("extracting " + temp_path, 0)
-				return read_file(temp_path, keywords, recursions+1)
+			if os.path.isdir(filepath):
+				dirList = list_directory(filepath, returnDir=True)
+				for files in dirList:  # fully recursive, be careful
+					filelines.append("\n-----<<<" + (filepath + "/" + files) + ">>>-----\n")
+					filelines.append("{{" + str(recursions) + " recursion(s) deep" + "}}\n")
+					filelines.extend(read_file(filepath + "/" + files, keywords, recursions+1))
+				return filelines
+			elif zipfile.is_zipfile(filepath):
+				with zipfile.ZipFile(filepath, "r") as zipped:
+					# temp directory / this program's temp / the zip file / *files inside
+					#temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
+					# wait why do i even split it wouldnt removing the split fix the zipbomb problem
+					temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/tmp/logParserTemp")[len(filepath.split("/"))-1]
+					zipped.extractall(path = temp_path)
+					vprint("extracting " + temp_path, 0)
+					return read_file(temp_path, keywords, recursions+1)
+			elif tarfile.is_tarfile(filepath):
+				with tarfile.open(filepath, "r:*") as tarred:
+					temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
+					tarred.extractall(path = temp_path)
+					vprint("extracting " + temp_path, 0)
+					return read_file(temp_path, keywords, recursions+1)
+			
 		# actual line reading
 		vprint("Reading lines, please wait...", 2)
 		if not args.force and not args.quiet:
@@ -170,7 +197,7 @@ def read_file(filepath, keywords, recursions=0):
 				return filelines
 			elif (statinfo.st_size > mem.available):
 				print("File size: {s} \t\t Free RAM + Swap: {f}".format(s=statinfo.st_size, f=(swapmem.free+mem.available)))
-				choice=input("This file is larger than your RAM, but may be small"
+				choice=safe_input("This file is larger than your RAM, but may be small"
 								+ " enough to fit in swap. This is probably "
 								+ "a bad idea. Continue? (y/n)\n> ")
 				if (choice.lower() == "n"):
@@ -181,25 +208,21 @@ def read_file(filepath, keywords, recursions=0):
 			# Read the line, and check for keywords
 			while True:
 				currentLine += 1
-				try:
-					lineString = f.readline()
-					if not lineString:
-						break
-					keyFound = False
-					for key in keywords:
-						if key in lineString:
-							if args.ignore_keyword:
-								for ig in args.ignore_keyword:
-									if ig not in lineString:
-										keyFound = True
-							else:
-								keyFound = True
-					if keyFound:
-						filelines.append(str(currentLine) + "] " + lineString)
+				lineString = f.readline()
+				if not lineString:
+					break
+				keyFound = False
+				for key in keywords:
+					if key in lineString:
+						if args.ignore_keyword:
+							for ig in args.ignore_keyword:
+								if ig not in lineString:
+									keyFound = True
+						else:
+							keyFound = True
+				if keyFound:
+					filelines.append(str(currentLine) + "] " + lineString)
 					spinningLoad()
-				except UnicodeDecodeError:
-					filelines.append(str(currentLine) + " <<UnicodeDecodeError>>")
-					pass
 		executionTimer(start_time)
 	except PermissionError:
 		vprint("Can't open file- permission denied", 3)
@@ -207,6 +230,15 @@ def read_file(filepath, keywords, recursions=0):
 	except FileNotFoundError:
 		vprint("File not found", 3)
 		return ["File not found"]
+	except ValueError as e:
+		vprint(e, 2)
+	except NotADirectoryError:
+		pass
+	except UnicodeDecodeError:
+		filelines.append(str(currentLine) + " <<UnicodeDecodeError>>")
+		pass
+	except IsADirectoryError:
+		pass
 	return filelines
 	
 
@@ -237,7 +269,7 @@ def view_lines(filelines):
 			currentLine += os.get_terminal_size(0)[1]-2
 			for i in range(currentLine): 
 				print(filelines[i], end="")
-			choice = input("\nMore? (Y/n)\n> ")
+			choice = safe_input("\nMore? (Y/n)\n> ")
 			if choice.lower() == "n":
 				break
 		except OSError: #fuzzing purposes
@@ -429,17 +461,42 @@ if __name__ == "__main__":
 		filelines = read_file(args.logpath, get_keywords())
 	else:
 		list_directory()
-		file_path = input("Type a file from above, or type a filepath...\n> ")
+		file_path = safe_input("Type a file from above, or type a filepath...\n> ")
 		keywords = get_keywords()
 		automate_command_builder(file_path, keywords)
 		filelines = read_file(file_path, keywords)
 
 	print(len(filelines), "instances found")
+	choiceList = ['s', 'v', 'c', 'e']
+	choice = ""
+	fail = False
 	while True:
-		choice = input("What do you want to do with these lines?"
-					+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search..."
-					+ "\n(E)xit\n> ")
-		if choice.lower() == "e":
+		if fail is True:
+			for letter in choice:
+				if letter in choiceList:
+					choice = letter
+					fail = False
+					break
+		else:
+			choice = safe_input("What do you want to do with these lines?"
+							+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search..."
+							+ "\n(E)xit\n> ")
+		print("'", choice, "'")
+		if choice.lower() == choiceList[0]:
+			while True:
+				choice = safe_input("Name your file...")
+				if choice is not "":
+					save_file(filelines, choice)
+					break
+				else:
+					vprint("File name \"" + choice + "\" not valid.", 2)
+		elif choice.lower() == choiceList[1]:
+			view_lines(filelines)
+		elif choice.lower() == choiceList[2]:
+			file_path = safe_input("Type a filepath...\n> ")
+			filelines = read_file(file_path, keywords)
+			print(len(filelines), "instances found")
+		elif choice.lower() == choiceList[3] or "<Unknown" in choice or choice == "":
 			vprint("exiting...", 3)
 			# probably fine but should have verification? dont wanna delete user files-
 			# but at a certian point, it's kinda their fault for storing files in /tmp...
@@ -447,17 +504,9 @@ if __name__ == "__main__":
 			if os.path.isdir(tempfile.gettempdir() + "/logParserTemp/"):
 				shutil.rmtree(tempfile.gettempdir() + "/logParserTemp/")
 			os._exit(0)
-		elif choice.lower() == "s":
-			choice = input("Name your file...")
-			save_file(filelines, choice)
-		elif choice.lower() == "v":
-			view_lines(filelines)
-		elif choice.lower() == "c":
-			file_path = input("Type a filepath...\n> ")
-			filelines = read_file(file_path, keywords)
-			print(len(filelines), "instances found")
 		else:
-			print("choose something else")
+			fail = True
+			
 		
 		
 	

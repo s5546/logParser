@@ -1,6 +1,9 @@
 !/bin/sh
-for file in out/crashes/*
+rm -rf tmp
+mkdir tmp
+cd tmp
+for file in ../out/crashes/*
 do
-  scripts/fuzzparser.py < "$file"
-  read -p "Press enter to continue"
+  ../scripts/fuzzparser06-19.py < "$file"
+  read -p "<Press enter to continue>"
 done
