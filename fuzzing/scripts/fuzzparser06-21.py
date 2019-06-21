@@ -180,7 +180,7 @@ def read_file(file_path, keywords, recursions=0):
 			if file_path in args.ignore_file:
 				return
 			if os.path.isdir(file_path):
-				dir_list = list_directory(file_path, returnDir=True)
+				dir_list = list_directory(file_path, True)
 				for files in dir_list:  # fully recursive, be careful
 					temp_lines.append("\n-----<<<" + (file_path + "/" + files) + ">>>-----\n")
 					temp_lines.append("{{" + str(recursions) + " recursion(s) deep" + "}}\n")
@@ -189,8 +189,6 @@ def read_file(file_path, keywords, recursions=0):
 			elif zipfile.is_zipfile(file_path):
 				with zipfile.ZipFile(file_path, "r") as zipped:
 					# temp directory / this program's temp / the zip file / *files inside
-					# temp_path = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
-					# wait why do i even split it wouldnt removing the split fix the zipbomb problem
 					temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/tmp/logParserTemp")[
 						len(file_path.split("/")) - 1]
 					zipped.extractall(path=temp_path)
@@ -224,7 +222,7 @@ def read_file(file_path, keywords, recursions=0):
 				if choice.lower() == "n":
 					return temp_lines
 		vprint("Opening file: " + file_path, -1)
-		start_time = executionTimer()
+		start_time = execution_timer()
 		with open(file_path, "r") as f:
 			# Read the line, and check for keywords
 			while True:
@@ -244,7 +242,7 @@ def read_file(file_path, keywords, recursions=0):
 				if key_found:
 					temp_lines.append(str(current_line) + "] " + lineString)
 					spinning_load()
-		executionTimer(start_time)
+		execution_timer(start_time)
 	except PermissionError:
 		vprint("Can't open file- permission denied", 3)
 		return ["Permission denied for this file"]
@@ -269,10 +267,10 @@ If not given a time, returns the current time.
 """
 
 
-def executionTimer(startTime=None):
-	if startTime is None:
+def execution_timer(start_time=None):
+	if start_time is None:
 		return time.time()
-	exe_time = time.time() - startTime
+	exe_time = time.time() - start_time
 	if exe_time > 7200:  # if above 2 hrs, show by hours
 		vprint("<< {} hours >>".format(exe_time / 3600), -1)
 	elif exe_time > 600:  # if above 10 minutes, show by minutes
@@ -282,9 +280,8 @@ def executionTimer(startTime=None):
 
 
 """
-takes a list and prints each element on its own line
-prints until the screen is 2 lines away from being filled, then prompts
- user to continue or stop
+takes a list and prints each element on its own line. Prints until the screen is 2 lines away from being filled, then 
+prompts user to continue or stop
 """
 
 
@@ -300,7 +297,7 @@ def view_lines(filelines):
 				break
 		except OSError:  # fuzzing purposes
 			break
-		except:
+		except: # todo: too broad, figure out what this should actually be
 			vprint("<<<<End of lines>>>>", 2, end="")
 			currentLine = 0
 
@@ -313,34 +310,34 @@ Something tells me there's a smarter way of doing this.
 
 
 def automate_command_builder(path, keywords):
-	autoCommandString = os.path.basename(__file__)
-	autoCommandString += " -l " + path
+	auto_command_string = os.path.basename(__file__)
+	auto_command_string += " -l " + path
 	if args.force:
-		autoCommandString += " -f"
+		auto_command_string += " -f"
 	if args.fun:
-		autoCommandString += " -x"
+		auto_command_string += " -x"
 	if args.verbose:
-		autoCommandString += " -" + ("v" * args.verbose)
+		auto_command_string += " -" + ("v" * args.verbose)
 	if args.unix:
-		autoCommandString += " -u"
+		auto_command_string += " -u"
 	elif args.windows:
-		autoCommandString += " -w"
+		auto_command_string += " -w"
 	if args.savename:
-		autoCommandString += " -s " + args.savename
+		auto_command_string += " -s " + args.savename
 	if args.risky:
-		autoCommandString += " -r"
-	autoCommandString += " -k"
+		auto_command_string += " -r"
+	auto_command_string += " -k"
 	for line in keywords:
-		autoCommandString += " " + line
+		auto_command_string += " " + line
 	if args.ignore_keyword:
-		autoCommandString += " -ik"
+		auto_command_string += " -ik"
 		for line in args.ignore_keyword:
-			autoCommandString += " " + line
+			auto_command_string += " " + line
 	if args.ignore_keyword:
-		autoCommandString += " -if"
+		auto_command_string += " -if"
 		for line in args.ignore_file:
-			autoCommandString += " " + line
-	vprint("Protip: automate this command using \"" + autoCommandString + "\"", 1)
+			auto_command_string += " " + line
+	vprint("Protip: automate this command using \"" + auto_command_string + "\"", 1)
 
 
 """
@@ -348,30 +345,28 @@ Lists all files in a given directory.
 """
 
 
-def list_directory(path=None, returnDir=False):
+def list_directory(path=None, return_dir=False):
 	if path is None:
 		os.getcwd()
 	directory = os.listdir(path)
 	for line in directory:
 		vprint(line, 1)
-	if returnDir:
+	if return_dir:
 		return directory
 
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(
-		description="Takes UTF-8 decodable logs (aka nearly all logs) and reads"
-					+ " them, scanning for keywords.",
+		description="Takes UTF-8 decodable logs (aka nearly all logs) and reads them, scanning for keywords.",
 		prefix_chars="-/"
 	)
 	parser.add_argument(
 		"-l",
 		"--logpath",
 		help="the path to the logfile. If your log is in a different directory,"
-			+ " use an equals between the -s/--savename and your path"
-			+ " (aka an absolute path)."
+			+ " use an equals between the -l/--logname and your path (aka an absolute path)."
 			+ " Supports files, directories, zip files, and tar files."
-			+ " Recursively searches, so use with caution.",
+			+ " Searches recursively, so use with caution.",
 		type=str,
 		metavar="<log path>"
 	)
@@ -445,7 +440,7 @@ def parse_arguments():
 	parser.add_argument(
 		"-if",
 		"--ignore_file",
-		help="logfiles to ignore. Put this at the end of your command, and then enter as many logfiles as you want.",
+		help="log files to ignore. Put this at the end of your command, and then enter as many log files as you want.",
 		nargs="*"
 	)
 	return parser.parse_args()
@@ -459,6 +454,7 @@ i'm sorry for this
 def global_args(arg_space):
 	global args
 	args = arg_space
+
 
 """
 <<Main Method>>
