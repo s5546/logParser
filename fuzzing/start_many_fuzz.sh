@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+pwd
 tarname="out-$(date +%m-%d-%Y.%H-%M).tar.gz"
 tar -czvf old_outs/$tarname out/*
 rm -rf out
