@@ -32,9 +32,10 @@ class ControlApp:
 		# text group
 		self.log_label = Label(self.text_group, text="Log path:")
 		self.log_path = Entry(self.text_group, text="enter a log path here...", textvariable=self.opt_dict["log_path"])
-		self.log_browse = Button(self.text_group, text="Browse for file(s)...", command = lambda: self.browse("log_path"))
+		self.log_browse = Button(self.text_group, text="Browse for file(s)...", command=lambda: self.browse("log_path"))
 		self.save_label = Label(self.text_group, text="Save path:")
 		self.save_path = Entry(self.text_group, text="enter a save path here..", textvariable=self.opt_dict["save_path"])
+		self.save_browse = Button(self.text_group, text="Browse for save...", command=lambda: self.browse("save_path"))
 		self.keywords_label = Label(self.text_group, text="Keywords:")
 		self.keywords = Entry(self.text_group, text="enter your keywords here...", textvariable=self.opt_dict["keyword_list"])
 		self.ignored_keywords_label = Label(self.text_group, text="Ignored keywords:")
@@ -50,15 +51,18 @@ class ControlApp:
 		self.return_box = Checkbutton(self.option_group, text="Return", variable=self.opt_dict["return_value"])
 		self.verbosity_slider = Scale(self.option_group, from_=3, to=-3, variable=self.opt_dict["verbosity_value"], label="Verbosity")
 
-		# text grid section
+		# group grid section
 		self.text_group.grid(row=0, column=0)
-		self.option_group.grid(row=0, column=1)
-		self.operation_group.grid(row=0, column=2)
+		self.option_group.grid(row=1, column=0)
+		self.operation_group.grid(row=2, column=0)
+
+		# text grid section
 		self.log_label.grid(row=0, column=0)
 		self.log_path.grid(row=0, column=1)
 		self.log_browse.grid(row=0, column=2)
 		self.save_label.grid(row=1, column=0)
 		self.save_path.grid(row=1, column=1)
+		self.save_browse.grid(row=1, column=2)
 		self.keywords_label.grid(row=2, column=0)
 		self.keywords.grid(row=2, column=1)
 		self.ignored_keywords_label.grid(row=3, column=0)
@@ -90,7 +94,7 @@ class ControlApp:
 	"""
 	def browse(self, dict_target=None):
 		if dict_target is "log_path":
-			self.opt_dict[dict_target].set(filedialog.askdirectory())
+			self.opt_dict[dict_target].set(filedialog.askopenfilename())
 		elif dict_target is "save_path":
 			self.opt_dict[dict_target].set(filedialog.asksaveasfilename())
 		elif dict_target is None:

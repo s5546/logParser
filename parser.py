@@ -33,6 +33,8 @@ import psutil
 """
 Python's input() method doesn't check that the user inputted bytes, and instead assumes the input's a string- rasing an 
 exception if it's not a string. This method catches all exceptions that user input and fuzzing have shown me.
+
+todo: vulnerable to recursion exceptions, fix that
 """
 
 
@@ -76,6 +78,9 @@ def save_file(list_to_be_written, name="parsedLog"):
 		vprint("Permission denied, cannot save in directory " + os.getcwd(), 2)
 	except NotADirectoryError:
 		vprint("Save location invalid", 2)
+	except shutil.SameFileError:
+		vprint("\'tmpFile\' isn't recommended for a file name, as it's used internally for- what else- temporary files."
+				+ "Your file's still been saved, but you should move it before running this program again.", 2)
 
 
 """
@@ -178,28 +183,28 @@ def read_file(file_path, keywords, recursions=0):
 		if args.ignore_file:
 			if file_path in args.ignore_file:
 				return
-			if os.path.isdir(file_path):
-				dir_list = list_directory(file_path, True)
-				for files in dir_list:  # fully recursive, be careful
-					temp_lines.append("\n-----<<<" + (file_path + "/" + files) + ">>>-----\n")
-					temp_lines.append("{{" + str(recursions) + " recursion(s) deep" + "}}\n")
-					temp_lines.extend(read_file(file_path + "/" + files, keywords, recursions + 1))
-				return temp_lines
-			elif zipfile.is_zipfile(file_path):
-				with zipfile.ZipFile(file_path, "r") as zipped:
-					# temp directory / this program's temp / the zip file / *files inside
-					temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/tmp/logParserTemp")[
-						len(file_path.split("/")) - 1]
-					zipped.extractall(path=temp_path)
-					vprint("extracting " + temp_path, 0)
-					return read_file(temp_path, keywords, recursions + 1)
-			elif tarfile.is_tarfile(file_path):
-				with tarfile.open(file_path, "r:*") as tarred:
-					temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/")[
-						len(file_path.split("/")) - 1]
-					tarred.extractall(path=temp_path)
-					vprint("extracting " + temp_path, 0)
-					return read_file(temp_path, keywords, recursions + 1)
+		if os.path.isdir(file_path):
+			dir_list = list_directory(file_path, True)
+			for files in dir_list:  # fully recursive, be careful
+				temp_lines.append("\n-----<<<" + (file_path + "/" + files) + ">>>-----\n")
+				temp_lines.append("{{" + str(recursions) + " recursion(s) deep" + "}}\n")
+				temp_lines.extend(read_file(file_path + "/" + files, keywords, recursions + 1))
+			return temp_lines
+		elif zipfile.is_zipfile(file_path):
+			with zipfile.ZipFile(file_path, "r") as zipped:
+				# temp directory / this program's temp / the zip file / *files inside
+				temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/tmp/logParserTemp")[
+					len(file_path.split("/")) - 1]
+				zipped.extractall(path=temp_path)
+				vprint("extracting " + temp_path, 0)
+				return read_file(temp_path, keywords, recursions + 1)
+		elif tarfile.is_tarfile(file_path):
+			with tarfile.open(file_path, "r:*") as tarred:
+				temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/")[
+					len(file_path.split("/")) - 1]
+				tarred.extractall(path=temp_path)
+				vprint("extracting " + temp_path, 0)
+				return read_file(temp_path, keywords, recursions + 1)
 
 		# actual line reading
 		vprint("Reading lines, please wait...", 2)
@@ -226,20 +231,20 @@ def read_file(file_path, keywords, recursions=0):
 			# Read the line, and check for keywords
 			while True:
 				current_line += 1
-				lineString = f.readline()
-				if not lineString:
+				line_string = f.readline()
+				if not line_string:
 					break
 				key_found = False
 				for key in keywords:
-					if key in lineString:
+					if key in line_string:
 						if args.ignore_keyword:
 							for ig in args.ignore_keyword:
-								if ig not in lineString:
+								if ig is "" or ig not in line_string:
 									key_found = True
 						else:
 							key_found = True
 				if key_found:
-					temp_lines.append(str(current_line) + "] " + lineString)
+					temp_lines.append(str(current_line) + "] " + line_string)
 					spinning_load()
 		execution_timer(start_time)
 	except PermissionError:
@@ -254,8 +259,6 @@ def read_file(file_path, keywords, recursions=0):
 		pass
 	except UnicodeDecodeError:
 		temp_lines.append(str(current_line) + " <<UnicodeDecodeError>>")
-		pass
-	except IsADirectoryError:
 		pass
 	return temp_lines
 
@@ -285,20 +288,22 @@ prompts user to continue or stop
 
 
 def view_lines(filelines):
-	currentLine = 0
+	current_line = 0
 	while True:  # emulated do-while loop
 		try:
-			currentLine += os.get_terminal_size(0)[1] - 2
-			for i in range(currentLine):
+			print(str(os.get_terminal_size(0)[1] - 2))
+			current_line += os.get_terminal_size(0)[1] - 2
+			for i in range(current_line):
 				print(filelines[i], end="")
 			choice = safe_input("\nMore? (Y/n)\n> ")
 			if choice.lower() == "n":
 				break
 		except OSError:  # fuzzing purposes
 			break
-		except: # todo: too broad, figure out what this should actually be
+		except Exception as e:  # todo: too broad, figure out what this should actually be
+			print(e)
 			vprint("<<<<End of lines>>>>", 2, end="")
-			currentLine = 0
+			current_line = 0
 
 
 """
@@ -332,7 +337,7 @@ def automate_command_builder(path, keywords):
 		auto_command_string += " -ik"
 		for line in args.ignore_keyword:
 			auto_command_string += " " + line
-	if args.ignore_keyword:
+	if args.ignore_file:
 		auto_command_string += " -if"
 		for line in args.ignore_file:
 			auto_command_string += " " + line
@@ -494,7 +499,7 @@ if __name__ == "__main__":
 								+ "\n(E)xit\n> ")
 		print("'", choice, "'")
 		vprint(str(len(file_lines)) + " instances found", 2)
-		if choice.lower() == choiceList[0]:
+		if choice.lower() == choiceList[0]:  # s
 			while True:
 				choice = safe_input("Name your file...")
 				if choice is not "":
@@ -502,19 +507,19 @@ if __name__ == "__main__":
 					break
 				else:
 					vprint("File name \"" + choice + "\" not valid.", 2)
-		elif choice.lower() == choiceList[1]:
+		elif choice.lower() == choiceList[1]:  # v
 			view_lines(file_lines)
-		elif choice.lower() == choiceList[2]:
+		elif choice.lower() == choiceList[2]:  # c
 			file_lines = read_file(safe_input("Type a filepath...\n> "), get_keywords())
 			print(len(file_lines), "instances found")
-		elif choice.lower() == choiceList[3] or "<Unknown" in choice or choice == "":
+		elif choice.lower() == choiceList[3] or "<Unknown" in choice or choice == "":  # e
 			vprint("exiting...", 3)
 			# probably fine but should have verification? dont wanna delete user files-
-			# but at a certian point, it's kinda their fault for storing files in /tmp...
+			# but at a certain point, it's kinda their fault for storing files in /tmp...
 			# but if this ever somehow gets a wildly wrong directly, that's gonna suck
 			if os.path.isdir(tempfile.gettempdir() + "/logParserTemp/"):
 				shutil.rmtree(tempfile.gettempdir() + "/logParserTemp/")
-			os._exit(0)
+			sys.exit(0)
 		else:
 			fail = True
 
@@ -526,16 +531,16 @@ class Parser:
 
 	def __init__(self, **options):
 		self.opts = options
-		self.update_arguments(self.opts)
+		self.update_arguments()
 		global_args(self.args)
 
 	def easy_read_lines(self):
-		self.update_arguments(self.opts)
-		self.read_filelines()
+		self.update_arguments()
+		self.read_file_lines()
 		if self.opts["save_path"].get() is not "":
-			save_file(self.filelines, self.opts["save_path"].get())
+			save_file(self.file_lines, self.opts["save_path"].get())
 
-	def update_arguments(self, options, skip_parse_args=False):
+	def update_arguments(self, skip_parse_args=False):
 		if not skip_parse_args:
 			self.args = parse_arguments()
 		verbosity = self.opts["verbosity_value"].get()
@@ -545,8 +550,8 @@ class Parser:
 			else:
 				self.args.verbose = verbosity
 		self.args.log_path = self.opts["log_path"].get()
-		self.args.ignore_keyword = self.opts["ignored_keyword_list"].get()  # todo: adapt from string to list
-		self.args.ignore_file = self.opts["ignored_file_list"].get()  # todo: adapt from string to list
+		self.args.ignore_keyword = self.opts["ignored_keyword_list"].get().split(", ")
+		self.args.ignore_file = self.opts["ignored_file_list"].get().split(", ")
 		forced_os = self.opts["force_os_detection"].get()
 		if forced_os is not "":
 			if forced_os is "u":
@@ -555,14 +560,16 @@ class Parser:
 				self.args.windows = True
 		self.args.force = self.opts["force_box"].get()
 		self.args.fun = self.opts["fun_box"].get()
-		global_args(self.args)
 		self.args.save_name = self.opts["save_path"].get()
+		self.args.keyword = self.opts["keyword_list"].get().split(",")
+		global_args(self.args)
+		print(args)
 
-	def read_filelines(self, also_get_lines=False):
-		self.filelines = read_file(self.opts["log_path"].get(), self.opts[
-			"keyword_list"].get())  # reading the file  # todo: adapt keywords from string to list
+	def read_file_lines(self, also_get_lines=False):
+		self.file_lines = read_file(self.args.log_path, self.args.keyword)
+		print(len(self.file_lines))
 		if also_get_lines:
 			return self.get_file_lines()
 
 	def get_file_lines(self):
-		return self.filelines
+		return self.file_lines

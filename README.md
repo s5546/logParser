@@ -72,10 +72,9 @@ Known bugs:
 	
 - The read speed seems wildly inconsistent- see logParservsGrep06-05-19.png
 
-	Shows average times over 1250 trials, LP has a std dev. of **~5** but grep has ~1 std devs
+	Shows average times over 1250 trials, LP has a std dev. of ~5 but grep is at about 1
 	
-	Might just be bad testing? LP was first and i started testing that before the workday ended (i.e. while i was still doing things)
-	
+	On a more recent trial, the min and median beat grep's mid median and mean- but the max almost doubles grep's max, bringing the mean to +8 seconds. Something's volatile in my program?
 ----
 Example files included:
 
@@ -99,18 +98,6 @@ https://www.secrepo.com/ has some pretty good logs if ya need em
 
 todo:
 
-- Gui-
-
-	textfield describing each input on mousehover
-	
-	basic option textboxes
-	
-	radio buttons for switches
-	
-	output for the log- probably a second window?
-	
-	turn console on and off
-
 - innovate
 
 	- Grep's a native linux command and about 2-4x faster than this, so what can this offer?
@@ -118,6 +105,8 @@ todo:
 		- I probably can't match it for speed (at least with a single thread), since I'm on python (or is that just an excuse? idk)
 		
 		- we occasionally beat grep on multiple file searches
+		
+		- we can search through partially binary files
 	
 	- ideas (not necessarily practical ones):
 		
@@ -150,14 +139,6 @@ todo:
 	- stop after XXXXMB parsed
 	
 - clean up
-
-	- why my formatting succ so much pls fix, future me
-	
-	- figure out how to format python code
-	
-	- why all these random variables happening everywhere
-	
-	- dem import statements
 	
 	- nicer exceptions
 	
@@ -165,10 +146,6 @@ todo:
 	
 	
 - QoL
-
-	- line count suffixes
-	
-	- better explanations on the -h screen
 
 	- faster reading
 	
@@ -179,7 +156,5 @@ todo:
 	- improve the spin loader
 		
 		- threading, basically
-		
-	- add file filtering to readFile()
 	
 Email altmcman@gmail.com if you have suggestions or problems
