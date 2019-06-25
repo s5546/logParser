@@ -60,7 +60,7 @@ Known bugs:
 
 	Accepts absolute paths when there's an equals between the -l and the path
 	
-- Some directories are added, regardless of if they have any matches
+- All files parsed are listed in output, regardless of if they match any keywords
 
 - Depending on how they're made, Zip Bombs can occasionally put the program in an infinite loop of extracting the same few zips
 
@@ -68,13 +68,17 @@ Known bugs:
 
 - CLI: typing a null byte anywhere causes program to crash
 
-	tbh this feels like it's above me?
+	this is expected for python- null bytes serve as EOF for python- but should i protect against that?
 	
 - The read speed seems wildly inconsistent- see logParservsGrep06-05-19.png
 
 	Shows average times over 1250 trials, LP has a std dev. of ~5 but grep is at about 1
 	
 	On a more recent trial, the min and median beat grep's mid median and mean- but the max almost doubles grep's max, bringing the mean to +8 seconds. Something's volatile in my program?
+
+- verbosity is broken on the gui- both directions appear to make it more verbose
+
+- the list box keeps adding its entries repeatedly
 ----
 Example files included:
 
@@ -120,11 +124,23 @@ todo:
 
 	- A fourm post I found suggested checking the size of the tmp folder, and comparing that to the original file- if the ratio of uncompressed:compressed is too high, stop reading.
 
+- some type of analytics?
+
+    - canvas on tkinter
+    
+    - i might need R for that
+    
+        - it'll make IST 365 easier for me so eh why not
+        
+        - though i have no idea how python integration's gonna go for that
+
+config:
+
+- log search history
+
 - options menu
 
 	- (make these settings persistent somehow)
-
-	- Where to save to?
 	
 	- How to sort the lines?
 	

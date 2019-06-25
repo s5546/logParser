@@ -1,33 +1,38 @@
 from tkinter import *
 from tkinter import filedialog
 from parser import Parser # work on your naming scheme bruh
+import time
 
 #button implementation
 class ControlApp:
-	
+
 	def __init__(self, master):
-		
+
 		self.opt_dict = {
-			"log_path" : StringVar(),
-			"save_path" : StringVar(),
-			"keyword_list" : StringVar(),
-			"ignored_keyword_list" : StringVar(),
-			"ignored_file_list" : StringVar(),
-			"force_os_detection" : StringVar(),
-			"verbosity_value" : IntVar(),
-			"fun_box" : BooleanVar(),
-			"force_box" : BooleanVar(),
-			"return_value" : BooleanVar()
+			"log_path": StringVar(),
+			"save_path": StringVar(),
+			"keyword_list": StringVar(),
+			"ignored_keyword_list": StringVar(),
+			"ignored_file_list": StringVar(),
+			"force_os_detection": StringVar(),
+			"verbosity_value": IntVar(),
+			"fun_box": BooleanVar(),
+			"force_box": BooleanVar(),
+			"return_value": BooleanVar(),
+			"line_sorting": IntVar(),
+			"line_limit": IntVar(),
+			"remove_redundant": BooleanVar(),
+			"recursion": BooleanVar()
 		}
 		# group creation
 		self.operation_group = LabelFrame(master, text="Operations")
 		self.text_group = LabelFrame(master, text="Search options")
 		self.option_group = LabelFrame(master, text="Misc options")
-		# todo: self.output_group
 
 		# operation group
 		self.quit_button = Button(self.operation_group, text="QUIT", fg="pink", command=master.quit)
 		self.parse_button = Button(self.operation_group, text="parse", command=lambda: self.parse(self.opt_dict))
+		self.option_button = Button(self.operation_group, text="Options...", command=lambda: self.option_menu())
 
 		# text group
 		self.log_label = Label(self.text_group, text="Log path:")
@@ -44,17 +49,10 @@ class ControlApp:
 		self.ignored_files = Entry(self.text_group, text="enter your ignored files here...", textvariable=self.opt_dict["ignored_file_list"])
 
 		# option group
-		self.force_unix_detection = Radiobutton(self.option_group, text="Unix", variable=self.opt_dict["force_os_detection"], value="u", indicatoron=0)
-		self.force_windows_detection = Radiobutton(self.option_group, text="Windows", variable=self.opt_dict["force_os_detection"], value="w", indicatoron=0)
-		self.fun_box = Checkbutton(self.option_group, text="Fun", variable=self.opt_dict["fun_box"])
-		self.force_box = Checkbutton(self.option_group, text="Force", variable=self.opt_dict["force_box"])
-		self.return_box = Checkbutton(self.option_group, text="Return", variable=self.opt_dict["return_value"])
-		self.verbosity_slider = Scale(self.option_group, from_=3, to=-3, variable=self.opt_dict["verbosity_value"], label="Verbosity")
 
 		# group grid section
 		self.text_group.grid(row=0, column=0)
-		self.option_group.grid(row=1, column=0)
-		self.operation_group.grid(row=2, column=0)
+		self.operation_group.grid(row=1, column=0)
 
 		# text grid section
 		self.log_label.grid(row=0, column=0)
@@ -70,25 +68,34 @@ class ControlApp:
 		self.ignored_files_label.grid(row=4, column=0)
 		self.ignored_files.grid(row=4, column=1)
 
-		# option pack section
-		self.force_unix_detection.pack(side=LEFT)
-		self.force_windows_detection.pack(side=LEFT)
-		self.verbosity_slider.pack(side=LEFT)
-		self.fun_box.pack(side=LEFT)
-		self.force_box.pack(side=LEFT)
-		self.return_box.pack(side=LEFT)
-
 		# operation pack section
-		self.quit_button.pack(side=RIGHT)
 		self.parse_button.pack(side=LEFT)
+		self.option_button.pack()
+		self.quit_button.pack(side=RIGHT)
+
 	"""
 	"""
-	@staticmethod
-	def parse(vars_dict):
+	def parse(self, vars_dict):
+		win = Toplevel()
 		log_parser = Parser(**vars_dict)
-		log_parser.easy_read_lines()
-		for line in log_parser.get_file_lines():
-			print(line)
+		text_frame = LabelFrame(win, text="Output")
+		text_frame.pack(fill=BOTH, expand=1)
+		scrollbar_text_box = Scrollbar(text_frame)
+		scrollbar_text_box.pack(side=RIGHT, fill=Y)
+		text_box = Text(text_frame, wrap=WORD, borderwidth=3, yscrollcommand=scrollbar_text_box.set)
+		close_button = Button(win, text='OK', command=win.destroy)
+		scrollbar_text_box.pack()
+		scrollbar_text_box.config(command=text_box.yview)
+		text_box.pack(fill=BOTH, expand=1)
+		close_button.pack()
+		try:
+			log_parser.easy_read_lines()
+			file_lines = log_parser.get_file_lines()
+			for line in file_lines:
+				text_box.insert(END, line)
+		except TypeError as e:
+			print(e)
+			text_box.insert(END, "TYPEERROR: Can't read file, it might not exist")
 
 	"""
 	"""
@@ -101,6 +108,37 @@ class ControlApp:
 			return filedialog.askopenfilename()
 		else:
 			print("Error: dict_target invalid")
+
+	def option_menu(self):
+		win = Toplevel()
+		Label(win, text="").pack()
+		Button(win, text='OK', command=win.destroy).pack()
+		sort_list = Listbox(win, listvariable=self.opt_dict["line_sorting"])
+		recursive_box = Checkbutton(win, text="Recursion", variable=self.opt_dict["recursion"])
+		limit_value = Entry(win, textvariable=self.opt_dict["line_limit"])
+
+		force_unix_detection = Radiobutton(win, text="Unix", variable=self.opt_dict["force_os_detection"], value="u",
+												indicatoron=0)
+		force_windows_detection = Radiobutton(win, text="Windows", indicatoron=0, value="w",
+												variable=self.opt_dict["force_os_detection"])
+		fun_box = Checkbutton(win, text="Fun", variable=self.opt_dict["fun_box"])
+		force_box = Checkbutton(win, text="Force", variable=self.opt_dict["force_box"])
+		return_box = Checkbutton(win, text="Return", variable=self.opt_dict["return_value"])
+		verbosity_slider = Scale(win, from_=3, to=-3, variable=self.opt_dict["verbosity_value"], label="Verbosity")
+		redundant_box = Checkbutton(win, text="Remove Redundant", variable=self.opt_dict["remove_redundant"])
+
+		verbosity_slider.pack()
+		force_unix_detection.pack()
+		force_windows_detection.pack()
+		sort_list.pack()
+		limit_value.pack()
+		recursive_box.pack()
+		fun_box.pack()
+		force_box.pack()
+		return_box.pack()
+		redundant_box.pack()
+		for item in ["A-Z (Default)", "Z-A"]:
+			sort_list.insert(END, item)
 
 
 # root widget

@@ -165,6 +165,7 @@ def get_keywords():
 		keyword_list.append(keyword)
 
 
+
 """
 Reads a file located at a given path.
 Checks that the file can actually be read without running out of memory (unless the f or q flag has been set)
@@ -177,12 +178,13 @@ Also checks if path is a compressed (tar or zip) file.
 
 def read_file(file_path, keywords, recursions=0):
 	temp_lines = []
+	line_list = []
 	current_line = 0
 	print("printing: \"", file_path, "\"")
 	try:
 		if args.ignore_file:
-			if file_path in args.ignore_file:
-				return
+			if file_path.split("/")[len(file_path.split("/"))-1] in args.ignore_file:
+				return ["Ignoring file..."]
 		if os.path.isdir(file_path):
 			dir_list = list_directory(file_path, True)
 			for files in dir_list:  # fully recursive, be careful
@@ -205,7 +207,6 @@ def read_file(file_path, keywords, recursions=0):
 				tarred.extractall(path=temp_path)
 				vprint("extracting " + temp_path, 0)
 				return read_file(temp_path, keywords, recursions + 1)
-
 		# actual line reading
 		vprint("Reading lines, please wait...", 2)
 		if not args.force and not args.quiet:
@@ -244,8 +245,12 @@ def read_file(file_path, keywords, recursions=0):
 						else:
 							key_found = True
 				if key_found:
-					temp_lines.append(str(current_line) + "] " + line_string)
-					spinning_load()
+					if args.remove_redundant and line_string in temp_lines:
+						pass
+					else:
+						temp_lines.append(line_string)
+						line_list.append(str(current_line) + "] ")
+						spinning_load()
 		execution_timer(start_time)
 	except PermissionError:
 		vprint("Can't open file- permission denied", 3)
@@ -260,6 +265,9 @@ def read_file(file_path, keywords, recursions=0):
 	except UnicodeDecodeError:
 		temp_lines.append(str(current_line) + " <<UnicodeDecodeError>>")
 		pass
+	except IOError:
+		vprint("IOError opening file", 3)
+		return ["IOError opening file"]
 	return temp_lines
 
 
@@ -377,14 +385,13 @@ def parse_arguments():
 	parser.add_argument(
 		"-s",
 		"--savename",
-		help="What to save the parsed log as. If you want it in a different"
-			+ " directory, use an equals between the -s/--savename and your path"
-			+ " (aka an absolute path).",
+		help="What to save the parsed log as. If you want it in a different directory, use an equals between "
+			+ "the -s/--savename and your path (aka an absolute path).",
 		metavar="<save name>"
 	)
 	parser.add_argument(
-		"-r",
-		"--risky",
+		"-d",
+		"--dangerous",
 		help="does riskier operations for potentially more speed. This actually doesn't do much at the moment...",
 		action="store_true"
 	)
@@ -398,7 +405,7 @@ def parse_arguments():
 		"-x",
 		"--fun",
 		help="starts the fun by adding the spinner! its so fun, your cpu will forget to do work- execution is 2-6x "
-			+ "slower with this on, beware",
+			+ "slower with this on, beware... also it doesnt worlk rn",
 		action="store_true"
 	)
 
@@ -430,6 +437,26 @@ def parse_arguments():
 		action="count"
 	)
 	parser.add_argument(
+		"-ll",
+		"--line_limit",
+		help="limits output to XXXX lines before stopping. Must be an integer.",
+		nargs=1
+	)
+	parser.add_argument(
+		"-rr",
+		"--remove_redundant",
+		help="ignores all redundant lines found while parsing",
+		action="store_true"
+	)
+	parser.add_argument(
+		"-r",
+		"--recursive",
+		help="searches in folders/zips/tar archives for more files. Specify the max recursion depth, or set to 0 for "
+			+ "unlimited recursion (vulnerable to decompression bomb attacks). Can use up a LOT of CPU/Disk time, and "
+			+ "plenty of disk space in %tmp%/logParserTemp.",
+		nargs=1
+	)
+	parser.add_argument(
 		"-k",
 		"--keyword",
 		help="keywords to search for. Put this at the end of your command, and then enter as many keywords as you want.",
@@ -447,6 +474,7 @@ def parse_arguments():
 		help="log files to ignore. Put this at the end of your command, and then enter as many log files as you want.",
 		nargs="*"
 	)
+
 	return parser.parse_args()
 
 
@@ -561,15 +589,16 @@ class Parser:
 		self.args.force = self.opts["force_box"].get()
 		self.args.fun = self.opts["fun_box"].get()
 		self.args.save_name = self.opts["save_path"].get()
-		self.args.keyword = self.opts["keyword_list"].get().split(",")
+		self.args.keyword = self.opts["keyword_list"].get().split(", ")
+		self.args.line_limit = self.opts["line_limit"].get()
+		self.args.remove_redundant = self.opts["remove_redundant"].get()
+		self.args.recursive = self.opts["recursion"].get()
 		global_args(self.args)
 		print(args)
 
-	def read_file_lines(self, also_get_lines=False):
+	def read_file_lines(self):
 		self.file_lines = read_file(self.args.log_path, self.args.keyword)
 		print(len(self.file_lines))
-		if also_get_lines:
-			return self.get_file_lines()
 
 	def get_file_lines(self):
 		return self.file_lines

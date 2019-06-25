@@ -1,3 +1,3 @@
 #!/bin/bash
-multitime -q -n 1250 ../logParser.bak.py -f -l=../../../syslogs -k facebook
-multitime -n 1250 grep "facebook" ../../../syslogs/* > greptrash
+multitime -n 500 grep "facebook" /mnt/hgfs/Logs/* > greptrash
+multitime -q -n 500 ~/PycharmProjects/logParser/parser.py -f -l=/mnt/hgfs/Logs -k facebook -s test

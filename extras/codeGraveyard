@@ -215,3 +215,26 @@ def readCompressedFile(compressedFilePath, keywords, compressionType):
 							print(lineString)
 							filelines.append(lineString)
 	return filelines
+
+# Meant to check if a file is a .gz file, and then extract the files within.
+# The latter part was what stopped me- I could read files line-by-line but extracting each file requires more trickery
+
+# there's no dedicated function to check for gzip compression so we must check
+# the magic number and file extension for a pretty good guess
+		elif '.gz' in file_path and is_gz_file(file_path):
+			with gzip.open(file_path) as gzipped:
+				with io.TextIOWrapper(gzipped, encoding="utf-8") as dec:
+					print(dec.read())
+				temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/")[
+					len(file_path.split("/")) - 1]
+
+				vprint("extracting " + temp_path, 0)
+				return read_file(temp_path, keywords, recursions + 1)
+
+"""
+Companion function to read_file.
+Checks if the file at the given path is a gz file; returns true if so, else returns false.
+"""
+def is_gz_file(filepath):
+	with open(filepath, 'rb') as test_f:
+		return binascii.hexlify(test_f.read(2)) == b'1f8b'l
