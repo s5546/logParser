@@ -185,7 +185,9 @@ def read_file(file_path, keywords, recursions=0):
 		if args.ignore_file:
 			if file_path.split("/")[len(file_path.split("/"))-1] in args.ignore_file:
 				return ["Ignoring file..."]
-		if os.path.isdir(file_path):
+			if recursions > args.recursive and args.recursive is not 0:
+				return ["Maximum recursion depth exceeded"]
+		if os.path.isdir(file_path) and args.recursive:
 			dir_list = list_directory(file_path, True)
 			for files in dir_list:  # fully recursive, be careful
 				temp_lines.append("\n-----<<<" + (file_path + "/" + files) + ">>>-----\n")
@@ -295,23 +297,30 @@ prompts user to continue or stop
 """
 
 
-def view_lines(filelines):
+def view_lines(file_lines):
 	current_line = 0
 	while True:  # emulated do-while loop
 		try:
-			print(str(os.get_terminal_size(0)[1] - 2))
-			current_line += os.get_terminal_size(0)[1] - 2
-			for i in range(current_line):
-				print(filelines[i], end="")
-			choice = safe_input("\nMore? (Y/n)\n> ")
-			if choice.lower() == "n":
+			for i in range(current_line, current_line + os.get_terminal_size(0)[1] - 2):
+				print(file_lines[i], end="")
+				current_line += 1
+			more = safe_input("\nMore? (Y/n)\n> ")
+			if more.lower() == "n":
 				break
-		except OSError:  # fuzzing purposes
-			break
-		except Exception as e:  # todo: too broad, figure out what this should actually be
-			print(e)
+		except OSError:
+			print("This function wasn't made for your terminal. Email altmcman@gmail.com and tell them your OS, and"
+				+ " (if applicable) your terminal emulator.")
+			print(file_lines[current_line], end="")
+			current_line += 1
+			more = safe_input("\nMore? (Y/n)\n> ")
+			if more.lower() == "n":
+				break
+		except IndexError:
 			vprint("<<<<End of lines>>>>", 2, end="")
 			current_line = 0
+			more = safe_input("\nMore? (Y/n)\n> ")
+			if more.lower() == "n":
+				break
 
 
 """
@@ -328,7 +337,7 @@ def automate_command_builder(path, keywords):
 		auto_command_string += " -f"
 	if args.fun:
 		auto_command_string += " -x"
-	if args.verbose:
+	if args.verbose:  # we dont need to check if it's quiet because if its quiet, this def doesnt happen anyway
 		auto_command_string += " -" + ("v" * args.verbose)
 	if args.unix:
 		auto_command_string += " -u"
@@ -336,8 +345,14 @@ def automate_command_builder(path, keywords):
 		auto_command_string += " -w"
 	if args.savename:
 		auto_command_string += " -s " + args.savename
-	if args.risky:
-		auto_command_string += " -r"
+	if args.recursive:
+		auto_command_string += " -r " + str(args.recursive)
+	if args.dangerous:
+		auto_command_string += " -d"
+	if args.line_limit:
+		auto_command_string += " -ll"
+	if args.remove_redundant:
+		auto_command_string += " -rr"
 	auto_command_string += " -k"
 	for line in keywords:
 		auto_command_string += " " + line
@@ -405,7 +420,7 @@ def parse_arguments():
 		"-x",
 		"--fun",
 		help="starts the fun by adding the spinner! its so fun, your cpu will forget to do work- execution is 2-6x "
-			+ "slower with this on, beware... also it doesnt worlk rn",
+			+ "slower with this on, beware... also it doesnt work rn",
 		action="store_true"
 	)
 
@@ -454,7 +469,8 @@ def parse_arguments():
 		help="searches in folders/zips/tar archives for more files. Specify the max recursion depth, or set to 0 for "
 			+ "unlimited recursion (vulnerable to decompression bomb attacks). Can use up a LOT of CPU/Disk time, and "
 			+ "plenty of disk space in %tmp%/logParserTemp.",
-		nargs=1
+		nargs=1,
+		default=1
 	)
 	parser.add_argument(
 		"-k",
@@ -515,16 +531,17 @@ if __name__ == "__main__":
 	choice = ""
 	fail = False
 	while True:
-		if fail is True:
+		if fail:
 			for letter in choice:
 				if letter in choiceList:
 					choice = letter
 					fail = False
 					break
+			if fail:
+				choice = safe_input("Input not recognized. Choose something else...")
 		else:
 			choice = safe_input("What do you want to do with these lines?"
-								+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search..."
-								+ "\n(E)xit\n> ")
+								+ "\n(S)ave to file\n(V)iew Logs\n(C)hange search...\n(E)xit\n> ")
 		print("'", choice, "'")
 		vprint(str(len(file_lines)) + " instances found", 2)
 		if choice.lower() == choiceList[0]:  # s
@@ -540,7 +557,7 @@ if __name__ == "__main__":
 		elif choice.lower() == choiceList[2]:  # c
 			file_lines = read_file(safe_input("Type a filepath...\n> "), get_keywords())
 			print(len(file_lines), "instances found")
-		elif choice.lower() == choiceList[3] or "<Unknown" in choice or choice == "":  # e
+		elif choice.lower() == choiceList[3] or choice == "" and fail:  # e
 			vprint("exiting...", 3)
 			# probably fine but should have verification? dont wanna delete user files-
 			# but at a certain point, it's kinda their fault for storing files in /tmp...

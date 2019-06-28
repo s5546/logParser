@@ -25,28 +25,93 @@ class ControlApp:
 			"recursion": BooleanVar()
 		}
 		# group creation
-		self.operation_group = LabelFrame(master, text="Operations")
-		self.text_group = LabelFrame(master, text="Search options")
-		self.option_group = LabelFrame(master, text="Misc options")
+		self.operation_group = LabelFrame(
+			master,
+			text="Operations"
+		)
+		self.text_group = LabelFrame(
+			master,
+			text="Search options"
+		)
+		self.option_group = LabelFrame(
+			master,
+			text="Misc options"
+		)
 
 		# operation group
-		self.quit_button = Button(self.operation_group, text="QUIT", fg="pink", command=master.quit)
-		self.parse_button = Button(self.operation_group, text="parse", command=lambda: self.parse(self.opt_dict))
-		self.option_button = Button(self.operation_group, text="Options...", command=lambda: self.option_menu())
+		self.quit_button = Button(
+			self.operation_group,
+			text="QUIT",
+			fg="pink",
+			command=master.quit
+		)
+		self.parse_button = Button(
+			self.operation_group,
+			text="parse",
+			command=lambda: self.parse(self.opt_dict)
+		)
+		self.option_button = Button(
+			self.operation_group,
+			text="Options...",
+			command=lambda: self.option_menu()
+		)
 
 		# text group
-		self.log_label = Label(self.text_group, text="Log path:")
-		self.log_path = Entry(self.text_group, text="enter a log path here...", textvariable=self.opt_dict["log_path"])
-		self.log_browse = Button(self.text_group, text="Browse for file(s)...", command=lambda: self.browse("log_path"))
-		self.save_label = Label(self.text_group, text="Save path:")
-		self.save_path = Entry(self.text_group, text="enter a save path here..", textvariable=self.opt_dict["save_path"])
-		self.save_browse = Button(self.text_group, text="Browse for save...", command=lambda: self.browse("save_path"))
-		self.keywords_label = Label(self.text_group, text="Keywords:")
-		self.keywords = Entry(self.text_group, text="enter your keywords here...", textvariable=self.opt_dict["keyword_list"])
-		self.ignored_keywords_label = Label(self.text_group, text="Ignored keywords:")
-		self.ignored_keywords = Entry(self.text_group, text="enter your ignored keywords here...", textvariable=self.opt_dict["ignored_keyword_list"])
-		self.ignored_files_label = Label(self.text_group, text="Ignored files:")
-		self.ignored_files = Entry(self.text_group, text="enter your ignored files here...", textvariable=self.opt_dict["ignored_file_list"])
+		self.log_label = Label(
+			self.text_group,
+			text="Log path:"
+		)
+		self.log_path = Entry(
+			self.text_group,
+			text="enter a log path here...",
+			textvariable=self.opt_dict["log_path"]
+		)
+		self.log_browse = Button(
+			self.text_group,
+			text="Browse for file(s)...",
+			command=lambda: self.browse("log_path")
+		)
+		self.save_label = Label(
+			self.text_group,
+			text="Save path:"
+		)
+		self.save_path = Entry(
+			self.text_group,
+			text="enter a save path here..",
+			textvariable=self.opt_dict["save_path"]
+		)
+		self.save_browse = Button(
+			self.text_group,
+			text="Browse for save...",
+			command=lambda: self.browse("save_path")
+		)
+		self.keywords_label = Label(
+			self.text_group,
+			text="Keywords:"
+		)
+		self.keywords = Entry(
+			self.text_group,
+			text="enter your keywords here...",
+			textvariable=self.opt_dict["keyword_list"]
+		)
+		self.ignored_keywords_label = Label(
+			self.text_group,
+			text="Ignored keywords:"
+			)
+		self.ignored_keywords = Entry(
+			self.text_group,
+			text="enter your ignored keywords here...",
+			textvariable=self.opt_dict["ignored_keyword_list"]
+		)
+		self.ignored_files_label = Label(
+			self.text_group,
+			text="Ignored files:"
+		)
+		self.ignored_files = Entry(
+			self.text_group,
+			text="enter your ignored files here...",
+			textvariable=self.opt_dict["ignored_file_list"]
+		)
 
 		# option group
 
