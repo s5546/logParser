@@ -182,12 +182,12 @@ def read_file(file_path, keywords, recursions=0):
 	current_line = 0
 	print("printing: \"", file_path, "\"")
 	try:
+		if args.recursive and recursions > int(args.recursive[0]) and int(args.recursive[0]) is not 0:
+			return ["Maximum recursion depth exceeded"]
 		if args.ignore_file:
 			if file_path.split("/")[len(file_path.split("/"))-1] in args.ignore_file:
 				return ["Ignoring file..."]
-			if recursions > args.recursive and args.recursive is not 0:
-				return ["Maximum recursion depth exceeded"]
-		if os.path.isdir(file_path) and args.recursive:
+		if os.path.isdir(file_path):
 			dir_list = list_directory(file_path, True)
 			for files in dir_list:  # fully recursive, be careful
 				temp_lines.append("\n-----<<<" + (file_path + "/" + files) + ">>>-----\n")
@@ -197,7 +197,7 @@ def read_file(file_path, keywords, recursions=0):
 		elif zipfile.is_zipfile(file_path):
 			with zipfile.ZipFile(file_path, "r") as zipped:
 				# temp directory / this program's temp / the zip file / *files inside
-				temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/tmp/logParserTemp")[
+				temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/")[
 					len(file_path.split("/")) - 1]
 				zipped.extractall(path=temp_path)
 				vprint("extracting " + temp_path, 0)
@@ -234,16 +234,22 @@ def read_file(file_path, keywords, recursions=0):
 			# Read the line, and check for keywords
 			while True:
 				current_line += 1
-				line_string = f.readline()
-				if not line_string:
-					break
+				line_string = ""
 				key_found = False
+				try:
+					line_string = f.readline()
+					if not line_string:
+						break
+				except UnicodeDecodeError:
+					print("hey WAIT")
+					temp_lines.append(u"\uFFFD\n")
 				for key in keywords:
 					if key in line_string:
 						if args.ignore_keyword:
+							key_found = True
 							for ig in args.ignore_keyword:
-								if ig is "" or ig not in line_string:
-									key_found = True
+								if ig in line_string:
+									key_found = False
 						else:
 							key_found = True
 				if key_found:
@@ -260,16 +266,13 @@ def read_file(file_path, keywords, recursions=0):
 	except FileNotFoundError:
 		vprint("File not found", 3)
 		return ["File not found"]
-	except ValueError as e:
-		vprint(e, 2)
 	except NotADirectoryError:
-		pass
-	except UnicodeDecodeError:
-		temp_lines.append(str(current_line) + " <<UnicodeDecodeError>>")
 		pass
 	except IOError:
 		vprint("IOError opening file", 3)
 		return ["IOError opening file"]
+	except ValueError as e:
+		vprint(e, 2)
 	return temp_lines
 
 
@@ -297,24 +300,25 @@ prompts user to continue or stop
 """
 
 
-def view_lines(file_lines):
+def view_lines(file_list):
 	current_line = 0
 	while True:  # emulated do-while loop
 		try:
-			for i in range(current_line, current_line + os.get_terminal_size(0)[1] - 2):
-				print(file_lines[i], end="")
+			try:
+				for i in range(current_line, current_line + os.get_terminal_size(0)[1] - 2):
+					print(file_list[i], end="")
+					current_line += 1
+				more = safe_input("\nMore? (Y/n)\n> ")
+				if more.lower() == "n":
+					break
+			except OSError:
+				print("This function wasn't made for your terminal. Email altmcman@gmail.com and tell them your OS, and"
+					+ " (if applicable) your terminal emulator.")
+				print(file_list[current_line], end="")
 				current_line += 1
-			more = safe_input("\nMore? (Y/n)\n> ")
-			if more.lower() == "n":
-				break
-		except OSError:
-			print("This function wasn't made for your terminal. Email altmcman@gmail.com and tell them your OS, and"
-				+ " (if applicable) your terminal emulator.")
-			print(file_lines[current_line], end="")
-			current_line += 1
-			more = safe_input("\nMore? (Y/n)\n> ")
-			if more.lower() == "n":
-				break
+				more = safe_input("\nMore? (Y/n)\n> ")
+				if more.lower() == "n":
+					break
 		except IndexError:
 			vprint("<<<<End of lines>>>>", 2, end="")
 			current_line = 0
@@ -391,7 +395,7 @@ def parse_arguments():
 		"-l",
 		"--logpath",
 		help="the path to the logfile. If your log is in a different directory,"
-			+ " use an equals between the -l/--logname and your path (aka an absolute path)."
+			+ " use an equals between the -l/--logpath and your path (aka an absolute path)."
 			+ " Supports files, directories, zip files, and tar files."
 			+ " Searches recursively, so use with caution.",
 		type=str,
@@ -470,7 +474,7 @@ def parse_arguments():
 			+ "unlimited recursion (vulnerable to decompression bomb attacks). Can use up a LOT of CPU/Disk time, and "
 			+ "plenty of disk space in %tmp%/logParserTemp.",
 		nargs=1,
-		default=1
+		metavar="<recursion_depth>"
 	)
 	parser.add_argument(
 		"-k",

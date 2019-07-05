@@ -1,9 +1,8 @@
 from tkinter import *
 from tkinter import filedialog
-from parser import Parser # work on your naming scheme bruh
-import time
+from parser import Parser  # work on your naming scheme bruh
 
-#button implementation
+
 class ControlApp:
 
 	def __init__(self, master):
@@ -22,7 +21,7 @@ class ControlApp:
 			"line_sorting": IntVar(),
 			"line_limit": IntVar(),
 			"remove_redundant": BooleanVar(),
-			"recursion": BooleanVar()
+			"recursion": IntVar()
 		}
 		# group creation
 		self.operation_group = LabelFrame(
@@ -42,7 +41,6 @@ class ControlApp:
 		self.quit_button = Button(
 			self.operation_group,
 			text="QUIT",
-			fg="pink",
 			command=master.quit
 		)
 		self.parse_button = Button(
@@ -140,7 +138,8 @@ class ControlApp:
 
 	"""
 	"""
-	def parse(self, vars_dict):
+	@staticmethod
+	def parse(vars_dict):
 		win = Toplevel()
 		log_parser = Parser(**vars_dict)
 		text_frame = LabelFrame(win, text="Output")
@@ -176,16 +175,38 @@ class ControlApp:
 
 	def option_menu(self):
 		win = Toplevel()
-		Label(win, text="").pack()
-		Button(win, text='OK', command=win.destroy).pack()
-		sort_list = Listbox(win, listvariable=self.opt_dict["line_sorting"])
-		recursive_box = Checkbutton(win, text="Recursion", variable=self.opt_dict["recursion"])
-		limit_value = Entry(win, textvariable=self.opt_dict["line_limit"])
+		Button(
+			win,
+			text='OK',
+			command=win.destroy).pack()
+		sort_list = Listbox(
+			win,
+			listvariable=self.opt_dict["line_sorting"]
+		)
+		recursive_value = Entry(
+			win,
+			text="Recursion",
+			textvariable=self.opt_dict["recursion"]
+		)
+		limit_value = Entry(
+			win,
+			textvariable=self.opt_dict["line_limit"]
+		)
 
-		force_unix_detection = Radiobutton(win, text="Unix", variable=self.opt_dict["force_os_detection"], value="u",
-												indicatoron=0)
-		force_windows_detection = Radiobutton(win, text="Windows", indicatoron=0, value="w",
-												variable=self.opt_dict["force_os_detection"])
+		force_unix_detection = Radiobutton(
+			win,
+			text="Unix",
+			variable=self.opt_dict["force_os_detection"],
+			value="u",
+			indicatoron=0
+		)
+		force_windows_detection = Radiobutton(
+			win,
+			text="Windows",
+			indicatoron=0,
+			value="w",
+			variable=self.opt_dict["force_os_detection"]
+		)
 		fun_box = Checkbutton(win, text="Fun", variable=self.opt_dict["fun_box"])
 		force_box = Checkbutton(win, text="Force", variable=self.opt_dict["force_box"])
 		return_box = Checkbutton(win, text="Return", variable=self.opt_dict["return_value"])
@@ -197,7 +218,7 @@ class ControlApp:
 		force_windows_detection.pack()
 		sort_list.pack()
 		limit_value.pack()
-		recursive_box.pack()
+		recursive_value.pack()
 		fun_box.pack()
 		force_box.pack()
 		return_box.pack()
