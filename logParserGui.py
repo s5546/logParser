@@ -141,7 +141,7 @@ class ControlApp:
 	@staticmethod
 	def parse(vars_dict):
 		win = Toplevel()
-		log_parser = Parser(**vars_dict)
+		log_parser = Analyzer(**vars_dict)
 		text_frame = LabelFrame(win, text="Output")
 		text_frame.pack(fill=BOTH, expand=1)
 		scrollbar_text_box = Scrollbar(text_frame)
