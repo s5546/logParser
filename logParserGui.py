@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import filedialog
-from parser import Parser  # work on your naming scheme bruh
+from analyzer import Analyzer  # work on your naming scheme bruh
 
 
 class ControlApp:
