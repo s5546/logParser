@@ -29,6 +29,8 @@ import shutil
 import tempfile
 import time
 import psutil
+from collections import defaultdict
+import hashlib
 
 """
 Python's input() method doesn't check that the user inputted bytes, and instead assumes the input's a string- rasing an 
@@ -98,13 +100,15 @@ less: debug															<vv>
 
 
 def vprint(print_string, priority=0, sep=" ", end="\n"):
-	if priority >= 3:
+	if priority >= 3: # with 3+ verbosity, always print messages
 		print(print_string, sep, end)
 	else:
 		if args.verbose:
-			if priority >= 1 - args.verbose:
+			if priority >= 1 - args.verbose:  #
 				print(print_string, sep, end)
 		elif args.quiet:
+			if args.quiet <= 3: # when quiet is at or below 3, never print messages
+				pass
 			if args.quiet < priority:
 				print(print_string, sep, end)
 		elif priority > 0:
@@ -174,12 +178,15 @@ keywords.
 Also checks if path is a directory; if so, it reads all files in that directory.
 Also checks if path is a compressed (tar or zip) file.
 """
+# forgive me father, for i have sinned
+file_hashes = defaultdict(list)
 
 
 def read_file(file_path, keywords, recursions=0):
 	temp_lines = []
 	line_list = []
 	current_line = 0
+	md5hash = hashlib.md5()
 	print("printing: \"", file_path, "\"")
 	try:
 		if args.recursive and recursions > int(args.recursive) and int(args.recursive) is not 0:
@@ -197,15 +204,13 @@ def read_file(file_path, keywords, recursions=0):
 		elif zipfile.is_zipfile(file_path):
 			with zipfile.ZipFile(file_path, "r") as zipped:
 				# temp directory / this program's temp / the zip file / *files inside
-				temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/")[
-					len(file_path.split("/")) - 1]
+				temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/")[len(file_path.split("/")) - 1]
 				zipped.extractall(path=temp_path)
 				vprint("extracting " + temp_path, 0)
 				return read_file(temp_path, keywords, recursions + 1)
 		elif tarfile.is_tarfile(file_path):
 			with tarfile.open(file_path, "r:*") as tarred:
-				temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/")[
-					len(file_path.split("/")) - 1]
+				temp_path = tempfile.gettempdir() + "/logParserTemp/" + file_path.split("/")[len(file_path.split("/")) - 1]
 				tarred.extractall(path=temp_path)
 				vprint("extracting " + temp_path, 0)
 				return read_file(temp_path, keywords, recursions + 1)
@@ -231,8 +236,23 @@ def read_file(file_path, keywords, recursions=0):
 		vprint("Opening file: " + file_path, -1)
 		start_time = execution_timer()
 		with open(file_path, "r") as f:
-			# Read the line, and check for keywords
 			while True:
+				data = f.read(67108864)  # 8MiB in bits
+				if not data:
+					break
+				md5hash.update(data.encode("utf-8"))
+			file_name = file_path.split("/")[len(file_path.split("/")) - 1]
+			if md5hash.hexdigest() in file_hashes[file_name]:
+				return ["File previously read..."]
+			else:
+				vprint(file_hashes, -2)
+				file_hashes[file_path.split("/")[len(file_path.split("/")) - 1]].append(md5hash.hexdigest())
+			# Read the line, and check for keywords
+			f.seek(0)
+			while True:
+				if current_line > args.line_limit:
+					print(str(current_line), " | ", str(args.line_limit))
+					break
 				current_line += 1
 				line_string = ""
 				key_found = False
@@ -241,7 +261,6 @@ def read_file(file_path, keywords, recursions=0):
 					if not line_string:
 						break
 				except UnicodeDecodeError:
-					print("hey WAIT")
 					temp_lines.append(u"\uFFFD\n")
 				for key in keywords:
 					if key in line_string:
@@ -273,6 +292,11 @@ def read_file(file_path, keywords, recursions=0):
 		return ["IOError opening file"]
 	except ValueError as e:
 		vprint(e, 2)
+	except (zipfile.BadZipFile, tarfile.ReadError, tarfile.CompressionError, tarfile.StreamError, tarfile.HeaderError) as e:
+		vprint("Error in compressed archive:\n" + str(e), 3)
+		return ["Zipfile is bad"]
+	if recursions == 0:  # if this is the root file being read
+		file_hashes.clear()
 	return temp_lines
 
 
@@ -313,7 +337,7 @@ def view_lines(file_list):
 					break
 			except OSError:
 				print("This function wasn't made for your terminal. Email altmcman@gmail.com and tell them your OS, and"
-					+ " (if applicable) your terminal emulator.")
+					+ " (if applicable) your terminal emulator. Maybe they can fix it? Maybe.")
 				print(file_list[current_line], end="")
 				current_line += 1
 				more = safe_input("\nMore? (Y/n)\n> ")
@@ -368,7 +392,7 @@ def automate_command_builder(path, keywords):
 		auto_command_string += " -if"
 		for line in args.ignore_file:
 			auto_command_string += " " + line
-	vprint("Protip: automate this command using \"" + auto_command_string + "\"", 1)
+	print("Protip: automate this command using \"" + auto_command_string + "\"")
 
 
 """
@@ -528,7 +552,8 @@ if __name__ == "__main__":
 		list_directory()
 		file_path = safe_input("Type a file from above, or type a filepath...\n> ")
 		keywords = get_keywords()
-		automate_command_builder(file_path, keywords)
+		if args.verbose > 0:
+			automate_command_builder(file_path, keywords)
 		file_lines = read_file(file_path, keywords)
 
 	choiceList = ['s', 'v', 'c', 'e']

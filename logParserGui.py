@@ -178,15 +178,24 @@ class ControlApp:
 		Button(
 			win,
 			text='OK',
-			command=win.destroy).pack()
+			command=win.destroy
+		).pack()
 		sort_list = Listbox(
 			win,
 			listvariable=self.opt_dict["line_sorting"]
+		)
+		recursive_label = Label(
+			win,
+			text="Recursion depth (0=∞)"
 		)
 		recursive_value = Entry(
 			win,
 			text="Recursion",
 			textvariable=self.opt_dict["recursion"]
+		)
+		limit_label = Label(
+			win,
+			text="Line Limit"
 		)
 		limit_value = Entry(
 			win,
@@ -217,7 +226,9 @@ class ControlApp:
 		force_unix_detection.pack()
 		force_windows_detection.pack()
 		sort_list.pack()
+		limit_label.pack()
 		limit_value.pack()
+		recursive_label.pack()
 		recursive_value.pack()
 		fun_box.pack()
 		force_box.pack()
