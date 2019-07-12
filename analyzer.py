@@ -469,7 +469,7 @@ def parse_arguments():
 	verboisty_group.add_argument(
 		"-v",
 		"--verbose",
-		help="intensifies console output. Use more v's for more output. 3+ v's will print *e v e r y t h i n g* .",
+		help="intensifies console output. Use more v's for more output. 3+ v's will print *e v e r y t h i n g*.",
 		action="count"
 	)
 	verboisty_group.add_argument(
