@@ -53,6 +53,14 @@ switches:
 
 - if: ignores all files matching this list
 
+- d: performs dangerous operations for potentially extra speed. Needs an argument passed to it, sprinkled around the code.
+
+- r: recursively searches when needed. Defaults to 0, for infinite recursion. Specify the recursion depth you want.
+
+- rr: removes redundant lines- eg if "abcd" is in a file twice, only the first time will be printed.
+
+- ll: limits output to XXXX lines before stopping. Must be an integer, and only counts up when a line matches.
+
 ----
 Known bugs:
 
