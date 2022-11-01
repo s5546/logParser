@@ -241,7 +241,26 @@ def read_file(filepath, keywords, recursions = 0):
 		elif tarfile.is_tarfile(filepath):
 			with tarfile.open(filepath, "r:*") as tarred:
 				tempPath = tempfile.gettempdir() + "/logParserTemp/" + filepath.split("/")[len(filepath.split("/"))-1]
-				tarred.extractall(path = tempPath)
+	def is_within_directory(directory, target):
+		
+		abs_directory = os.path.abspath(directory)
+		abs_target = os.path.abspath(target)
+	
+		prefix = os.path.commonprefix([abs_directory, abs_target])
+		
+		return prefix == abs_directory
+	
+	def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+	
+		for member in tar.getmembers():
+			member_path = os.path.join(path, member.name)
+			if not is_within_directory(path, member_path):
+				raise Exception("Attempted Path Traversal in Tar File")
+	
+		tar.extractall(path, members, numeric_owner=numeric_owner) 
+		
+	
+	safe_extract(tarred, path=tempPath)
 				return read_file(tempPath, keywords, recursions+1)
 		#actual line reading
 		vprint("Reading lines, please wait...", 2)
